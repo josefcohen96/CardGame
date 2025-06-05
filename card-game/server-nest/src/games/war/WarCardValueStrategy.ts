@@ -1,0 +1,9 @@
+import { ICard } from '../../interfaces/Interfaces';
+import { ICardValueStrategy } from '../../strategies/CardValueStrategy';
+
+export class WarCardValueStrategy implements ICardValueStrategy {
+  getCardValue(card: ICard): number {
+    if (card.suit === 'Joker') return 15;
+    return Number(card.value);
+  }
+}
