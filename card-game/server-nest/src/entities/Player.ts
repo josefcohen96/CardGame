@@ -4,10 +4,11 @@ import { ICard } from "../interfaces/Interfaces";
 export class Player implements IPlayer {
   public hand: ICard[] = [];
   public name: string;
+  public id: string = Math.random().toString(36).substring(2, 15); // Simple ID generation
   constructor(name: string) {
     this.name = name;
   }
-  
+
   playTopCard(): ICard | undefined {
     return this.hand.shift();
   }

@@ -35,7 +35,7 @@ export class WarGame extends CardGame {
     console.log("Game started, players are ready to play!");
   }
 
-  playTurn(): void {
+  playTurn(playerId: string): void {
     this.round++;
     const played: { player: IPlayer; card: ICard }[] = [];
 

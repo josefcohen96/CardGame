@@ -2,22 +2,26 @@
 import { Player } from '../entities/Player';
 import { Suit } from './Suits';
 
+export type GameType = 'war' | 'durak';
 
 export interface IGame {
   startGame(): void;
-  playTurn(player: Player): void;
+  playTurn(playerId: string, move: any): void;
   endGame(): void;
+  addPlayer(player: Player): boolean;
+  getState(): any;
 }
 
 export interface ICard {
   value: number;
   suit: Suit;
   color: string;
-  isJoker?(): boolean; 
+  isJoker?(): boolean;
   toString(): string;
 }
 
 export interface IPlayer {
+  id: string;
   name: string;
   hand: ICard[];
   playTopCard(): ICard | undefined;
