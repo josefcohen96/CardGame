@@ -2,8 +2,10 @@
 import { Player } from '../entities/Player';
 import { Suit } from './Suits';
 
-export type GameType = 'war' | 'durak';
-
+export enum GameType {
+  DURAK = 'durak',
+  WAR = 'war',
+}
 export interface IGame {
   startGame(): void;
   playTurn(playerId: string, move: any): void;

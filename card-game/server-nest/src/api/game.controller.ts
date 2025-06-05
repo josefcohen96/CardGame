@@ -1,6 +1,6 @@
 import { Controller, Post, Body, Get, Param } from '@nestjs/common';
+import { GameType } from '../interfaces/Interfaces';
 
-type GameType = 'war' | 'durak';
 
 interface CreateGameDto {
     type: GameType;
