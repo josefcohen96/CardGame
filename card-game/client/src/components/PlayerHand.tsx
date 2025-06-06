@@ -1,5 +1,5 @@
 import React from 'react';
-import Card from './Card';
+import Card from './CardDisplay';
 import { PlayerState } from '../games/gameInterfaces';
 
 const PlayerHand = ({ player, isCurrent }: { player: PlayerState; isCurrent: boolean }) => {

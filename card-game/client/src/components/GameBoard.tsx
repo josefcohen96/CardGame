@@ -1,25 +1,12 @@
-import React from 'react';
-import PlayerHand from './PlayerHand';
-import { GameState } from '../games/gameInterfaces';
+import { Card } from "../types/card";
+import CardDisplay from "./CardDisplay";
 
-const GameBoard = ({ state }: { state: GameState }) => {
+export default function GameBoard({ pile }: { pile: Card[] }) {
   return (
-    <div>
-      {state.players.map((p, i) => (
-        <PlayerHand key={i} player={p} isCurrent={i === state.currentPlayerIndex} />
+    <div className="flex gap-2 justify-center items-center p-6 bg-gray-100 rounded-2xl shadow-inner">
+      {pile.map((card, i) => (
+        <CardDisplay card={card} key={i} />
       ))}
-      {state.pile && (
-        <div>
-          <h4>🃏 Pile</h4>
-          <div style={{ display: 'flex' }}>
-            {state.pile.map((card, idx) => (
-              <div key={idx}>{card.value} {card.suit}</div>
-            ))}
-          </div>
-        </div>
-      )}
     </div>
   );
-};
-
-export default GameBoard;
+}
