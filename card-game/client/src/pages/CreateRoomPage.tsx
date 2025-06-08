@@ -1,5 +1,4 @@
-// src/pages/CreateRoomPage.tsx
-import React, { useState } from "react";
+import { useState } from "react";
 import { useNavigate, useSearchParams } from "react-router-dom";
 import { gameConfigs, GameType } from "../types/game";
 
@@ -9,8 +8,10 @@ export default function CreateRoomPage() {
   const navigate = useNavigate();
 
   const [roomName, setRoomName] = useState("");
-  const [playerName, setPlayerName] = useState("");
   const [numPlayers, setNumPlayers] = useState(2);
+
+  // נקרא ל־localStorage (או שם ברירת מחדל)
+  const playerName = localStorage.getItem("playerName") || `שחקן${Math.floor(Math.random() * 1000)}`;
 
   if (!type || !(type in gameConfigs)) {
     return <div className="text-center text-red-500 mt-10">סוג המשחק לא נתמך</div>;
@@ -20,7 +21,7 @@ export default function CreateRoomPage() {
 
   const handleCreate = () => {
     if (!roomName || !playerName) {
-      alert("נא להזין שם חדר ושם שחקן");
+      alert("נא להזין שם חדר (שם שחקן יילקח אוטומטית)");
       return;
     }
     // הוספה: נווט ללובי של החדר (השרת ייצור אותו)
@@ -43,14 +44,10 @@ export default function CreateRoomPage() {
         />
       </div>
 
+      {/* במקום input רגיל – הצגה בלבד */}
       <div>
         <label className="block text-sm mb-1">שם השחקן שלך</label>
-        <input
-          type="text"
-          className="w-full border rounded p-2"
-          value={playerName}
-          onChange={(e) => setPlayerName(e.target.value)}
-        />
+        <div className="w-full border rounded p-2 bg-gray-50 text-gray-600">{playerName}</div>
       </div>
 
       <div>

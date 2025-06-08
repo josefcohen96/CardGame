@@ -6,10 +6,9 @@ const app = express();
 const server = http.createServer(app);
 const io = new Server(server, { cors: { origin: "*" } });
 
-// מבנה נתונים גלובלי של חדרים
+
 const rooms = new Map(); // Map<roomId, RoomObject>
 
-// דוגמה לאובייקט חדר
 function createRoom(id, type, maxPlayers = 4) {
   return {
     id,
@@ -17,19 +16,16 @@ function createRoom(id, type, maxPlayers = 4) {
     players: [], // { id, name }
     maxPlayers,
     gameStarted: false,
-    // ... אפשר להוסיף עוד תכונות כאן
   };
 }
 
 io.on('connection', (socket) => {
   console.log('[Socket.io] client connected', socket.id);
 
-  // הצטרפות/יצירת חדר
   socket.on('join-game', (roomId, playerName) => {
     let room = rooms.get(roomId);
     if (!room) {
-      // סוג המשחק אפשר להעביר מהפרונט או לדחוף ל-join-game (פה מדגם לדוג')
-      const roomType = "war"; // ברירת מחדל, לשדרג לקלוט מ-client
+      const roomType = "war";
       room = createRoom(roomId, roomType);
       rooms.set(roomId, room);
     }
@@ -77,11 +73,8 @@ io.on('connection', (socket) => {
     }
     broadcastRooms();
   });
-
-  // אפשר להוסיף אירועים של game-state וכו' כאן
 });
 
-// מחזיר רשימה של כל החדרים (לא שולח שמות שחקנים)
 function getRoomList() {
   return Array.from(rooms.values()).map(room => ({
     id: room.id,
@@ -92,7 +85,6 @@ function getRoomList() {
   }));
 }
 
-// משדר לכולם את רשימת החדרים
 function broadcastRooms() {
   io.emit("room-list", getRoomList());
 }

@@ -10,6 +10,7 @@ export default function PlayerList({ players }: { players: PlayerState[] }) {
         >
           <span className="font-bold text-blue-700">{player.name}</span>
           <span className="text-xs text-gray-500">קלפים: {player.handSize}</span>
+          {/* מקום לסטטוס READY עתידי */}
         </li>
       ))}
     </ul>

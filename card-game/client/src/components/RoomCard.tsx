@@ -12,10 +12,7 @@ const RoomCard: React.FC<Props> = ({ room }) => {
   const navigate = useNavigate();
 
   const handleJoin = () => {
-    if (!playerName) {
-      alert("יש להזין שם שחקן קודם");
-      return;
-    }
+
     navigate(`/lobby/${room.type}/${room.id}?name=${playerName}`);
   };
 

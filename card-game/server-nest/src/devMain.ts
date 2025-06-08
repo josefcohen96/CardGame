@@ -45,7 +45,6 @@ async function main() {
     if (!firstCard) {
       console.log(`⚠️ ${attacker.name} has no valid cards to attack`);
       game.endTurn();
-      await sleep(200);
       continue;
     }
 
@@ -55,7 +54,6 @@ async function main() {
     if (!attackSuccess) {
       console.log(`🚫 Attack failed`);
       game.endTurn();
-      await sleep(200);
       continue;
     }
 
@@ -69,7 +67,6 @@ async function main() {
     if (possibleDefend) {
       console.log(`🛡️ ${defender.name} defends with: ${possibleDefend.toString()}`);
       game.defend(0, possibleDefend);
-      await sleep(150);
 
       // Additional attacks after defense
       const allowedValues = game['getAllowedAttackValues']();
@@ -105,7 +102,6 @@ async function main() {
           if (nextDefense) {
             console.log(`🛡️ ${defender.name} defends with: ${nextDefense.toString()} against ${pair.attacker.value} of ${pair.attacker.suit}`);
             game.defend(i, nextDefense);
-            await sleep(150);
           } else {
             console.log(`❌ ${defender.name} can't defend against ${pair.attacker.value} of ${pair.attacker.suit}`);
           }
@@ -127,7 +123,6 @@ async function main() {
     });
     console.log(`🃏 Cards left in deck: ${game.getState().deckSize}`);
 
-    await sleep(400);
     turnCount++;
   }
 
