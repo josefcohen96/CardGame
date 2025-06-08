@@ -3,6 +3,10 @@ import { AppController } from './app.controller';
 import { AppService } from './app.service';
 import { UserModule } from './api/user/user.module';
 import { TypeOrmModule } from '@nestjs/typeorm';
+import { SocketGateway } from '../src/sockets/socket.gateway';
+import { RoomEvents } from './sockets/events/room.events';
+import { GameEvents } from './sockets/events/game.events';
+
 
 @Module({
   imports: [
@@ -15,6 +19,6 @@ import { TypeOrmModule } from '@nestjs/typeorm';
     UserModule,
   ],
   controllers: [AppController],
-  providers: [AppService],
+  providers: [AppService, SocketGateway, RoomEvents, GameEvents],
 })
 export class AppModule { }

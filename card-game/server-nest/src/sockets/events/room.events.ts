@@ -1,38 +1,45 @@
-import { OnGatewayConnection, OnGatewayDisconnect, SubscribeMessage, WebSocketGateway, WebSocketServer, MessageBody, ConnectedSocket } from '@nestjs/websockets';
-import { Server, Socket } from 'socket.io';
+import { Injectable } from '@nestjs/common';
+import { Socket } from 'socket.io';
 
-@WebSocketGateway({ namespace: '/room' })
-export class RoomEventsGateway implements OnGatewayConnection, OnGatewayDisconnect {
-    @WebSocketServer()
-    server: Server;
+interface PlayerState {
+  id: string;
+  name: string;
+}
 
-    handleConnection(client: Socket) {
-        // Handle new client connection
-        console.log(`Client connected: ${client.id}`);
+@Injectable()
+export class RoomEvents {
+  private rooms: Record<string, PlayerState[]> = {};
+
+  joinRoom(data: { roomId: string; playerName: string }, client: Socket) {
+    const { roomId, playerName } = data;
+    client.join(roomId);
+
+    if (!this.rooms[roomId]) this.rooms[roomId] = [];
+
+    // אם המשתמש כבר קיים - אל תוסיף שוב
+    if (!this.rooms[roomId].find(p => p.id === client.id)) {
+      this.rooms[roomId].push({
+        id: client.id,
+        name: playerName,
+      });
     }
 
-    handleDisconnect(client: Socket) {
-        // Handle client disconnect
-        console.log(`Client disconnected: ${client.id}`);
-    }
+    // שלח לכל השחקנים את רשימת השחקנים המעודכנת
+    this.emitPlayerList(roomId, client);
+  }
 
-    @SubscribeMessage('joinRoom')
-    handleJoinRoom(
-        @MessageBody() data: { roomId: string; userId: string },
-        @ConnectedSocket() client: Socket,
-    ) {
-        client.join(data.roomId);
-        this.server.to(data.roomId).emit('userJoined', { userId: data.userId });
-        return { event: 'joinedRoom', data: { roomId: data.roomId } };
+  leaveRoom(data: { roomId: string }, client: Socket) {
+    const { roomId } = data;
+    client.leave(roomId);
+    if (this.rooms[roomId]) {
+      this.rooms[roomId] = this.rooms[roomId].filter(p => p.id !== client.id);
+      this.emitPlayerList(roomId, client);
     }
+  }
 
-    @SubscribeMessage('leaveRoom')
-    handleLeaveRoom(
-        @MessageBody() data: { roomId: string; userId: string },
-        @ConnectedSocket() client: Socket,
-    ) {
-        client.leave(data.roomId);
-        this.server.to(data.roomId).emit('userLeft', { userId: data.userId });
-        return { event: 'leftRoom', data: { roomId: data.roomId } };
-    }
+  emitPlayerList(roomId: string, client: Socket) {
+    const playerList = this.rooms[roomId] || [];
+    client.to(roomId).emit('player-list', playerList);
+    client.emit('player-list', playerList); // לשלוח גם לעצמי
+  }
 }

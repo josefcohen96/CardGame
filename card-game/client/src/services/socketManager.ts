@@ -17,7 +17,7 @@ class SocketManager {
 
     connect() {
         if (!this.socket) {
-            this.socket = io("http://localhost:3000", { autoConnect: false }); 
+            this.socket = io("http://localhost:3000", { autoConnect: false, transports: ["websocket", "polling"], }); 
             this.socket.on("connect", () => console.log("[Socket] Connected ✅"));
             this.socket.on("disconnect", () => console.log("[Socket] Disconnected ❌"));
         }

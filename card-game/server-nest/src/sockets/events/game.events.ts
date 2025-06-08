@@ -1,33 +1,17 @@
-import { OnGatewayConnection, OnGatewayDisconnect, SubscribeMessage, WebSocketGateway, WebSocketServer, MessageBody, ConnectedSocket } from '@nestjs/websockets';
-import { Server, Socket } from 'socket.io';
+import { Injectable } from '@nestjs/common';
+import { Socket } from 'socket.io';
 
-@WebSocketGateway({ namespace: '/game' })
-export class GameEventsGateway implements OnGatewayConnection, OnGatewayDisconnect {
-    @WebSocketServer()
-    server: Server;
+@Injectable()
+export class GameEvents {
+  startGame(data: { roomId: string }, client: Socket) {
+    // לוגיקה לאתחול משחק (למשל, לשמור/להחזיר מצב משחק התחלתי)
+    client.to(data.roomId).emit('game-started');
+    client.emit('game-started');
+  }
 
-    handleConnection(client: Socket) {
-        // Handle new client connection
-        console.log(`Client connected: ${client.id}`);
-    }
-
-    handleDisconnect(client: Socket) {
-        // Handle client disconnect
-        console.log(`Client disconnected: ${client.id}`);
-    }
-
-    @SubscribeMessage('joinGame')
-    handleJoinGame(@MessageBody() data: any, @ConnectedSocket() client: Socket) {
-        // Handle player joining a game
-        // Example: client.join(data.roomId);
-        this.server.to(data.roomId).emit('playerJoined', { playerId: client.id });
-        return { status: 'joined', roomId: data.roomId };
-    }
-
-    @SubscribeMessage('playCard')
-    handlePlayCard(@MessageBody() data: any, @ConnectedSocket() client: Socket) {
-        // Handle playing a card
-        this.server.to(data.roomId).emit('cardPlayed', { playerId: client.id, card: data.card });
-        return { status: 'cardPlayed', card: data.card };
-    }
+  onGameMove(data: any, client: Socket) {
+    // ביצוע מהלך, עדכון מצב המשחק וכו'
+    // לדוג׳:
+    // client.to(data.roomId).emit('game-update', {...});
+  }
 }

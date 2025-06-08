@@ -1,90 +1,35 @@
-import { Logger } from '@nestjs/common';
-import { Socket, Server } from 'socket.io';
-import {
-    SubscribeMessage,
-    WebSocketGateway,
-    OnGatewayInit,
-    OnGatewayConnection,
-    OnGatewayDisconnect,
-    MessageBody,
-    ConnectedSocket,
-    WebSocketServer
-} from '@nestjs/websockets';
-import { GameService } from '../games/game.service';
-import { Player } from '../entities/Player';
-import { GameType } from '../interfaces/Interfaces';
+import { SubscribeMessage, WebSocketGateway, MessageBody, ConnectedSocket } from '@nestjs/websockets';
+import { Socket } from 'socket.io';
+import { RoomEvents } from './events/room.events';
+import { GameEvents } from './events/game.events';
 
-@WebSocketGateway({
-    cors: {
-        origin: '*',
-    },
-})
-export class SocketGateway implements OnGatewayInit, OnGatewayConnection, OnGatewayDisconnect {
-    @WebSocketServer()
-    server: Server;
+@WebSocketGateway({ cors: { origin: "*" }, transports: ['websocket', 'polling'] })
+export class SocketGateway {
+  constructor(
+    private readonly roomEvents: RoomEvents,
+    private readonly gameEvents: GameEvents
+  ) { }
 
-    private logger: Logger = new Logger('SocketGateway');
+  // ROOM EVENTS
+  @SubscribeMessage('join-room')
+  handleJoinRoom(@MessageBody() data: { roomId: string; playerName: string }, @ConnectedSocket() client: Socket) {
+    console.log('Join room event received:', data);
+    return this.roomEvents.joinRoom(data, client);
+  }
 
-    constructor(private readonly gameService: GameService) { }
+  @SubscribeMessage('leave-room')
+  handleLeaveRoom(@MessageBody() data: { roomId: string }, @ConnectedSocket() client: Socket) {
+    return this.roomEvents.leaveRoom(data, client);
+  }
 
-    afterInit(server: Server) {
-        this.logger.log('WebSocket initialized');
-    }
+  // GAME EVENTS
+  @SubscribeMessage('start-game')
+  handleStartGame(@MessageBody() data: { roomId: string }, @ConnectedSocket() client: Socket) {
+    return this.gameEvents.startGame(data, client);
+  }
 
-    handleConnection(client: Socket) {
-        this.logger.log(`Client connected: ${client.id}`);
-    }
-
-    handleDisconnect(client: Socket) {
-        this.logger.log(`Client disconnected: ${client.id}`);
-    }
-
-    @SubscribeMessage('create_game')
-    handleCreateGame(
-        @MessageBody() data: { name: string; gameType: string },
-        @ConnectedSocket() client: Socket
-    ) {
-        const player = new Player(data.name);
-
-        if (!Object.values(GameType).includes(data.gameType as GameType)) {
-            client.emit('error', `Invalid game type: ${data.gameType}`);
-            return;
-        }
-
-        const gameId = this.gameService.createGame(player, data.gameType as GameType);
-        client.join(gameId);
-        client.emit('game_created', { gameId, playerId: player.id });
-    }
-
-    @SubscribeMessage('join_game')
-    handleJoinGame(
-        @MessageBody() data: { gameId: string; name: string },
-        @ConnectedSocket() client: Socket
-    ) {
-        const player = new Player(data.name);
-        const success = this.gameService.joinGame(data.gameId, player);
-        if (success) {
-            client.join(data.gameId);
-            this.server.to(data.gameId).emit('player_joined', {
-                playerName: data.name,
-                playerId: player.id,
-            });
-        } else {
-            client.emit('error', 'Failed to join game');
-        }
-    }
-
-    @SubscribeMessage('play_turn')
-    handlePlayTurn(
-        @MessageBody() data: { gameId: string; playerId: string; move: any },
-        @ConnectedSocket() client: Socket
-    ) {
-        try {
-            this.gameService.playTurn(data.gameId, data.playerId, data.move);
-            const state = this.gameService.getGameState(data.gameId);
-            this.server.to(data.gameId).emit('state_update', state);
-        } catch (err) {
-            client.emit('error', err.message);
-        }
-    }
-} 
+  @SubscribeMessage('game-move')
+  handleGameMove(@MessageBody() data: any, @ConnectedSocket() client: Socket) {
+    return this.gameEvents.onGameMove(data, client);
+  }
+}
