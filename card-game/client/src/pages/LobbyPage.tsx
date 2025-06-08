@@ -34,6 +34,7 @@ export default function LobbyPage() {
   }, [id, type, name, navigate]);
 
   useSocket("player-list", setPlayers);
+  console.log("Lobby players:", players);
 
   if (!id || !type) return <div>Invalid room</div>;
 

@@ -16,7 +16,7 @@ export class User {
   displayName!: string;
 
   @Column({ type: "json", nullable: true })
-  achievements!: any[]; // בהמשך אפשר להגדיר מבנה אחיד (array of objects)
+  achievements!: any[];
 
   @OneToOne(() => GameStats, stats => stats.user, { cascade: true })
   stats!: GameStats;

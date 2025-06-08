@@ -34,7 +34,7 @@ async function bootstrap() {
   // 1. בנה את אפליקציית NestJS
   const app = await NestFactory.create(AppModule);
   app.enableCors({ origin: '*' });
-
+  app.setGlobalPrefix('api'); 
   // 2. קבל את השרת HTTP מאחורי NestJS
   const expressApp = app.getHttpAdapter().getInstance();
   const server = createServer(expressApp);
