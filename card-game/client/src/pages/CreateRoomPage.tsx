@@ -10,9 +10,6 @@ export default function CreateRoomPage() {
   const [roomName, setRoomName] = useState("");
   const [numPlayers, setNumPlayers] = useState(2);
 
-  // נקרא ל־localStorage (או שם ברירת מחדל)
-  const playerName = localStorage.getItem("playerName") || `שחקן${Math.floor(Math.random() * 1000)}`;
-
   if (!type || !(type in gameConfigs)) {
     return <div className="text-center text-red-500 mt-10">סוג המשחק לא נתמך</div>;
   }
@@ -20,12 +17,11 @@ export default function CreateRoomPage() {
   const config = gameConfigs[type];
 
   const handleCreate = () => {
-    if (!roomName || !playerName) {
-      alert("נא להזין שם חדר (שם שחקן יילקח אוטומטית)");
+    if (!roomName) {
+      alert("נא להזין שם חדר");
       return;
     }
-    // הוספה: נווט ללובי של החדר (השרת ייצור אותו)
-    navigate(`/lobby/${type}/${roomName}?name=${playerName}`);
+    navigate(`/lobby/${type}/${roomName}`);
   };
 
   return (
@@ -44,11 +40,6 @@ export default function CreateRoomPage() {
         />
       </div>
 
-      {/* במקום input רגיל – הצגה בלבד */}
-      <div>
-        <label className="block text-sm mb-1">שם השחקן שלך</label>
-        <div className="w-full border rounded p-2 bg-gray-50 text-gray-600">{playerName}</div>
-      </div>
 
       <div>
         <label className="block text-sm mb-1">
