@@ -2,6 +2,7 @@ import { SubscribeMessage, WebSocketGateway, MessageBody, ConnectedSocket, OnGat
 import { Socket } from 'socket.io';
 import { RoomEvents } from './events/room.events';
 import { GameEvents } from './events/game.events';
+import { GameType } from 'src/interfaces/Interfaces';
 
 @WebSocketGateway({ cors: { origin: "*" }, transports: ['websocket', 'polling'] })
 export class SocketGateway implements OnGatewayDisconnect {
@@ -17,12 +18,14 @@ export class SocketGateway implements OnGatewayDisconnect {
     this.gameEvents.handleDisconnect(client);
   }
 
+
   // ROOM EVENTS
   @SubscribeMessage('join-room')
-  handleJoinRoom(@MessageBody() data: { roomId: string; playerName: string }, @ConnectedSocket() client: Socket) {
+  handleJoinRoom(@MessageBody() data: { roomId: string; playerName: string, gameType: GameType }, @ConnectedSocket() client: Socket) {
     console.log('Join room event received:', data);
     return this.roomEvents.joinRoom(data, client);
   }
+
 
   @SubscribeMessage('leave-room')
   handleLeaveRoom(@MessageBody() data: { roomId: string }, @ConnectedSocket() client: Socket) {

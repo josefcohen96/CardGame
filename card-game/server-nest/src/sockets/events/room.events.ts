@@ -1,64 +1,96 @@
 import { Injectable } from '@nestjs/common';
 import { Socket } from 'socket.io';
+import { GameType } from 'src/interfaces/Interfaces';
+
 
 interface PlayerState {
   id: string;
   name: string;
 }
 
+interface Room {
+  id: string;
+  type: string ;          // war / durak / …
+  maxPlayers: number;
+  gameStarted: boolean;
+  players: PlayerState[];
+}
+
 @Injectable()
 export class RoomEvents {
-  private rooms: Record<string, PlayerState[]> = {};
+  /** roomId → Room */
+  private rooms: Record<string, Room> = {};
 
-  handleDisconnect(client: Socket) {
-    for (const roomId of Object.keys(this.rooms)) {
-      const index = this.rooms[roomId].findIndex(p => p.id === client.id);
-      if (index !== -1) {
-        this.rooms[roomId].splice(index, 1);
-        this.emitPlayerList(roomId, client);
-        if (this.rooms[roomId].length === 0) delete this.rooms[roomId];
-      }
-    }
-  }
-
-  joinRoom(data: { roomId: string; playerName: string }, client: Socket) {
-    const { roomId, playerName } = data;
+  joinRoom(
+    data: { roomId: string; playerName: string; gameType: GameType },
+    client: Socket,
+  ) {
+    const { roomId, playerName, gameType } = data; 
     client.join(roomId);
 
-    if (!this.rooms[roomId]) this.rooms[roomId] = [];
-
-    // אם המשתמש כבר קיים - אל תוסיף שוב
-    if (!this.rooms[roomId].find(p => p.id === client.id)) {
-      this.rooms[roomId].push({
-        id: client.id,
-        name: playerName,
-      });
+    /* צור חדר חדש אם אינו קיים */
+    if (!this.rooms[roomId]) {
+      this.rooms[roomId] = {
+        id: roomId,
+        type: gameType,
+        maxPlayers: 4,
+        gameStarted: false,
+        players: [],
+      };
     }
 
-    // שלח לכל השחקנים את רשימת השחקנים המעודכנת
+    const room = this.rooms[roomId];
+
+    // add player to the room if not already present
+    if (!room.players.find(p => p.id === client.id)) {
+      room.players.push({ id: client.id, name: playerName });
+    }
+
     this.emitPlayerList(roomId, client);
   }
 
   leaveRoom(data: { roomId: string }, client: Socket) {
     const { roomId } = data;
     client.leave(roomId);
-    if (this.rooms[roomId]) {
-      this.rooms[roomId] = this.rooms[roomId].filter(p => p.id !== client.id);
-      this.emitPlayerList(roomId, client);
+
+    const room = this.rooms[roomId];
+    if (!room) return;
+
+    room.players = room.players.filter(p => p.id !== client.id);
+    this.emitPlayerList(roomId, client);
+
+    if (room.players.length === 0) delete this.rooms[roomId];
+  }
+
+  handleDisconnect(client: Socket) {
+    for (const roomId of Object.keys(this.rooms)) {
+      const room = this.rooms[roomId];
+      const idx = room.players.findIndex(p => p.id === client.id);
+      if (idx !== -1) {
+        room.players.splice(idx, 1);
+        this.emitPlayerList(roomId, client);
+        if (room.players.length === 0) delete this.rooms[roomId];
+      }
     }
   }
 
-  emitPlayerList(roomId: string, client: Socket) {
-    const playerList = this.rooms[roomId] || [];
-    client.to(roomId).emit('player-list', playerList);
-    client.emit('player-list', playerList); // לשלוח גם לעצמי
+  /* ---------- שליחת נתונים ---------- */
+
+  /** שולח player-list לכל השחקנים בחדר + לשחקן שהפעיל */
+  private emitPlayerList(roomId: string, client: Socket) {
+    const list = this.rooms[roomId]?.players ?? [];
+    client.to(roomId).emit('player-list', list);
+    client.emit('player-list', list); // גם לשולח עצמו
   }
 
+  /** החזרת רשימת כל החדרים ללקוח שביקש */
   getRooms(client: Socket) {
-    const list = Object.keys(this.rooms).map(id => ({
-      id,
-      type: 'generic',
-      playerCount: this.rooms[id].length,
+    const list = Object.values(this.rooms).map(r => ({
+      id: r.id,
+      type: r.type,          // ← war / durak …
+      playerCount: r.players.length,
+      maxPlayers: r.maxPlayers,
+      gameStarted: r.gameStarted,
     }));
     client.emit('room-list', list);
   }

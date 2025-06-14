@@ -38,7 +38,7 @@ export default function LobbyPage() {
     const socket = socketManager.connect();
     const onConnect = () => {
       console.log("[Socket] Connected to lobby", { id, type, playerName });
-      socket.emit('join-room', { roomId: id, playerName });
+      socket.emit('join-room', { roomId: id, playerName, gameType: type });
     };
 
 

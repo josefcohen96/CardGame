@@ -1,5 +1,6 @@
 import { GameState } from "./game";
 import { PlayerState } from "./player";
+import { GameType } from "./game";
 
 export interface ServerToClientEvents {
   "game-state": (state: GameState) => void;
@@ -9,7 +10,7 @@ export interface ServerToClientEvents {
 }
 
 export interface ClientToServerEvents {
-  "join-room": (data: { roomId: string; playerName: string }) => void;
+  "join-room": (data: { roomId: string; playerName: string, gameType: GameType }) => void;
   "start-game": (roomId: string) => void;
   "get-rooms": () => void;
   "join-game": (data: { roomId: string; playerName: string }) => void;
