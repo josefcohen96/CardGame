@@ -20,7 +20,6 @@ export default function LobbyPage() {
   const { id, type } = useParams<{ id: string; type: GameType }>();
   const navigate = useNavigate();
 
-  /* מקור יחיד לשם-שחקן */
   const { user } = useAuth();
   const pnCtx = usePlayerName();
   const playerName =

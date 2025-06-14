@@ -1,14 +1,19 @@
-import { SubscribeMessage, WebSocketGateway, MessageBody, ConnectedSocket } from '@nestjs/websockets';
+import { SubscribeMessage, WebSocketGateway, MessageBody, ConnectedSocket, OnGatewayDisconnect } from '@nestjs/websockets';
 import { Socket } from 'socket.io';
 import { RoomEvents } from './events/room.events';
 import { GameEvents } from './events/game.events';
 
 @WebSocketGateway({ cors: { origin: "*" }, transports: ['websocket', 'polling'] })
-export class SocketGateway {
+export class SocketGateway implements OnGatewayDisconnect {
   constructor(
     private readonly roomEvents: RoomEvents,
     private readonly gameEvents: GameEvents
   ) { }
+
+  handleDisconnect(client: Socket) {
+    this.roomEvents.handleDisconnect(client);
+    this.gameEvents.handleDisconnect(client);
+  }
 
   // ROOM EVENTS
   @SubscribeMessage('join-room')
@@ -20,6 +25,16 @@ export class SocketGateway {
   @SubscribeMessage('leave-room')
   handleLeaveRoom(@MessageBody() data: { roomId: string }, @ConnectedSocket() client: Socket) {
     return this.roomEvents.leaveRoom(data, client);
+  }
+
+  @SubscribeMessage('get-rooms')
+  handleGetRooms(@ConnectedSocket() client: Socket) {
+    return this.roomEvents.getRooms(client);
+  }
+
+  @SubscribeMessage('join-game')
+  handleJoinGame(@MessageBody() data: { roomId: string; playerName: string }, @ConnectedSocket() client: Socket) {
+    return this.gameEvents.joinGame(data, client);
   }
 
   // GAME EVENTS

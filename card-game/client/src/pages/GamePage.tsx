@@ -18,7 +18,7 @@ export default function GamePage() {
   useEffect(() => {
     if (!id || !type) return;
     socketManager.connect();
-    socketManager.emit("join-game", id, name);
+    socketManager.emit("join-game", { roomId: id, playerName: name });
 
     return () => {
       socketManager.disconnect();

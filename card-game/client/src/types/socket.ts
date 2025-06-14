@@ -12,4 +12,6 @@ export interface ClientToServerEvents {
   "join-room": (data: { roomId: string; playerName: string }) => void;
   "start-game": (roomId: string) => void;
   "get-rooms": () => void;
+  "join-game": (data: { roomId: string; playerName: string }) => void;
+  "game-move": (data: any) => void;
 }
