@@ -1,5 +1,5 @@
-import { IPlayer } from "../interfaces/Interfaces";
-import { ICard } from "../interfaces/Interfaces";
+import { IPlayer } from "../../interfaces";
+import { ICard } from "../../interfaces";
 
 export class Player implements IPlayer {
   public hand: ICard[] = [];

@@ -1,13 +1,9 @@
-import { StandardDeckFactory } from '../../factories/StandardDeckFactory';
-import { Deck } from '../../entities/Deck';
+import { buildStandardDeck } from '../factories/standard-deck.factory';
+import { Deck } from '../entities/Deck';
 
-export class DurakDeckFactory extends StandardDeckFactory {
-  constructor() {
-    super();
-  }
-
+export class DurakDeckFactory {
   static createDeck(): Deck {
-    const factory = new DurakDeckFactory();
-    return factory.buildDeck(6, 14, false); // ערכים 6-14, בלי ג'וקרים
+    // In Durak, the deck is typically a standard deck without jokers
+    return buildStandardDeck(2, 14, false);
   }
 }

@@ -1,5 +1,5 @@
-import { ICard } from '../../interfaces/Interfaces';
-import { ICardValueStrategy } from '../../strategies/CardValueStrategy';
+import { ICard } from '../../interfaces';
+import { ICardValueStrategy } from '../strategies/CardValueStrategy';
 
 export class WarCardValueStrategy implements ICardValueStrategy {
   getCardValue(card: ICard): number {

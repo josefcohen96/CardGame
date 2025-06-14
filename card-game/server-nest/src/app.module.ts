@@ -1,24 +1,29 @@
 import { Module } from '@nestjs/common';
+import { TypeOrmModule } from '@nestjs/typeorm';
 import { AppController } from './app.controller';
 import { AppService } from './app.service';
 import { UserModule } from './api/user/user.module';
-import { TypeOrmModule } from '@nestjs/typeorm';
-import { SocketGateway } from '../src/sockets/socket.gateway';
-import { RoomEvents } from './sockets/events/room.events';
-import { GameEvents } from './sockets/events/game.events';
-
+import { RoomModule } from './api/room/room.module';
+import { GameModule } from './api/game/game.module';
+import { SocketsModule } from './sockets/socket.module';
 
 @Module({
   imports: [
     TypeOrmModule.forRoot({
       type: 'sqlite',
       database: 'db.sqlite',
-      entities: ['dist/db/src/entities/*.entity.js'],
+      entities: [__dirname + '/**/*.entity.{ts,js}'],
       synchronize: true,
     }),
     UserModule,
+    RoomModule,
+    GameModule,
+    SocketsModule,
   ],
   controllers: [AppController],
-  providers: [AppService, SocketGateway, RoomEvents, GameEvents],
+
+  providers: [
+    AppService,
+  ],
 })
 export class AppModule { }

@@ -1,8 +1,11 @@
+
+// ./socket.gateway.ts
+
 import { SubscribeMessage, WebSocketGateway, MessageBody, ConnectedSocket, OnGatewayDisconnect, WebSocketServer, OnGatewayInit } from '@nestjs/websockets';
 import { Server, Socket } from 'socket.io';
 import { RoomEvents } from './events/room.events';
 import { GameEvents } from './events/game.events';
-import { GameType } from 'src/interfaces/Interfaces';
+import { GameType } from 'src/interfaces';
 
 @WebSocketGateway({ cors: { origin: "*" }, transports: ['websocket', 'polling'] })
 export class SocketGateway implements OnGatewayInit, OnGatewayDisconnect {
@@ -22,6 +25,11 @@ export class SocketGateway implements OnGatewayInit, OnGatewayDisconnect {
   handleDisconnect(client: Socket) {
     this.roomEvents.handleDisconnect(client);
     this.gameEvents.handleDisconnect(client);
+  }
+
+  /* חיבור לקוח (רק לצורכי לוג / דיבוג) */
+  handleConnection(socket: Socket) {
+    console.log(`Socket connected: ${socket.id}`);
   }
 
 
@@ -62,4 +70,5 @@ export class SocketGateway implements OnGatewayInit, OnGatewayDisconnect {
   handleGameMove(@MessageBody() data: any, @ConnectedSocket() client: Socket) {
     return this.gameEvents.onGameMove(data, client);
   }
+
 }

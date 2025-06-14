@@ -1,6 +1,6 @@
-import { ICard } from '../interfaces/Interfaces';
+import { ICard } from '../../interfaces';
 
-import { IPot } from '../interfaces/Interfaces';
+import { IPot } from '../../interfaces';
 
 export abstract class AbstractPot implements IPot {
   protected cards: ICard[] = [];

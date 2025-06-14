@@ -1,13 +1,9 @@
-import { StandardDeckFactory } from '../../factories/StandardDeckFactory';
-import { Deck } from '../../entities/Deck';
+import { buildStandardDeck } from '../factories/standard-deck.factory';
+import { Deck } from '../entities/Deck';
 
-export class WarDeckFactory extends StandardDeckFactory {
-  constructor() {
-    super();  // Call the parent constructor to initialize the deck
-  }
 
+export class WarDeckFactory {
   static createDeck(): Deck {
-    const factory = new WarDeckFactory();
-    return factory.buildDeck(2, 14, true); 
+    return buildStandardDeck(2, 14, false);
   }
 }

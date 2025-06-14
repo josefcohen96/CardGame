@@ -1,5 +1,5 @@
 import { Controller, Post, Body, Get, Param } from '@nestjs/common';
-import { GameType } from '../../interfaces/Interfaces';
+import { GameType } from '../../interfaces';
 
 
 interface CreateGameDto {

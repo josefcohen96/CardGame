@@ -1,8 +1,8 @@
 import { Injectable } from '@nestjs/common';
 import { Socket } from 'socket.io';
-import { GameService } from '../../games/game.service';
-import { GameType, Room, RoomPlayer, StartDto } from '../../interfaces/Interfaces';
-import { Player } from '../../entities/Player';
+import { GameService } from '../../api/game/game.service';
+import { GameType, Room, StartDto } from '../../interfaces';
+import { Player } from '../../games/entities/Player';
 
 /* helper להזרקה גלובלית של io */
 declare global { var io: Socket['server']; }

@@ -1,47 +1,59 @@
-import { Player } from 'src/entities/Player';
-import { IDeck, GameState, IPlayer, IGame, IPot } from '../interfaces/Interfaces';
+// card-game/server-nest/src/games/core/CardGame.ts
+import { Player } from '../entities/Player';
+import {
+    IDeck, IPot, IPlayer,
+    GameState, IGame, GameType
+} from '../../interfaces';
 
 export abstract class CardGame implements IGame {
+    protected readonly gameType: GameType;
     protected players: IPlayer[];
     protected deck: IDeck;
+    protected pot!: IPot;
     protected turnHistory: any[] = [];
     protected currentPlayerIndex = 0;
     protected gameOver = false;
-    protected pot: IPot; // סכום הקופה, יכול להיות גם אובייקט IPot
 
-    constructor(deck: IDeck, players: IPlayer[]) {
+    constructor(
+        gameType: GameType,
+        deck: IDeck,
+        players: IPlayer[],
+    ) {
+        this.gameType = gameType;
         this.deck = deck;
         this.players = players;
     }
 
-    /* --- מחייב כל משחק לממש --- */
+
+    /* --- חובה לממש במשחק הספציפי --- */
     abstract startGame(): GameState;
     abstract playTurn(playerId: string, move: any): GameState;
     abstract endGame(): GameState;
 
-    /* --- לוגיקה/עזר משותפים --- */
-
-    /** ברירת-מחדל: ניסיון להוסיף שחקן עד מקס׳ 4 */
+    /* --- הוספת/קבלת שחקנים --- */
     addPlayer(player: Player): boolean {
-        if (this.players.length >= 4) return false;
+        if (this.players.length >= 4) return false;   // אפשר להזיח לקונפיג
         this.players.push(player);
         return true;
     }
 
-    /** צילום מצב אחיד; משחק קונקרטי יכול להרחיב */
+    /* --- מציג מצב עדכני של המשחק --- */
     getState(): GameState {
         return {
-            gameId: '',                // ימולא ע״י GameService
+            gameId: '',                        // GameService ינפיק
+            type: this.gameType,             // ←  הוספנו!
             players: this.players,
             deck: this.deck,
             pot: this.pot,
             currentPlayerIndex: this.currentPlayerIndex,
             turnHistory: this.turnHistory,
             gameOver: this.gameOver,
+            winner: undefined,
+
         };
     }
 
-    /* getter בסיסי למי שזקוק */
+    /* --- getters נוחים --- */
     getDeck() { return this.deck; }
     getPlayers() { return this.players; }
 }

@@ -1,9 +1,11 @@
 // src/game/game.module.ts
 import { Module } from '@nestjs/common';
-import { GameService } from '../../games/game.service';
-import { GameGateway } from '../../games/game.gateway';
+import { GameService } from './game.service';
+import { GameController } from './game.controller';
 
 @Module({
-  providers: [GameService, GameGateway],
+  providers: [GameService],
+  exports: [GameService],
+  controllers: [GameController],
 })
-export class GameModule {}
+export class GameModule { }

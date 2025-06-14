@@ -1,5 +1,5 @@
-import { ICard } from '../interfaces/Interfaces';
-import { IDeck } from '../interfaces/Interfaces';
+import { ICard } from '../../interfaces';
+import { IDeck } from '../../interfaces';
 
 export  class Deck implements IDeck {
     public cards: ICard[];

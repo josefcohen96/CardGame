@@ -1,5 +1,5 @@
-import { ICard } from '../../interfaces/Interfaces';
-import { Suit } from '../../interfaces/Suits';
+import { ICard } from '../../interfaces';
+import { Suit } from '../../interfaces/suits.enum';
 
 export class DurakCardValueStrategy {
   constructor(private trumpSuit: Suit) {}
