@@ -1,36 +1,27 @@
 import { Injectable } from '@nestjs/common';
 import { Socket } from 'socket.io';
-import { GameType } from '../../interfaces/Interfaces';      // enum שלך
+import { GameService } from '../../games/game.service';
+import { GameType, Room, RoomPlayer, StartDto } from '../../interfaces/Interfaces';
+import { Player } from '../../entities/Player';
 
-/* ---------- טיפוסים ---------- */
-export interface RoomPlayer {
-  id: string;
-  name: string;
-  ready: boolean;
-  isHost: boolean;
-}
-export interface Room {
-  id: string;
-  type: GameType;
-  maxPlayers: number;
-  gameStarted: boolean;
-  players: RoomPlayer[];
-}
+/* helper להזרקה גלובלית של io */
+declare global { var io: Socket['server']; }
 
 @Injectable()
 export class RoomEvents {
   private rooms: Record<string, Room> = {};
 
-  /* ------------- חיבור / ניתוק ------------- */
+  constructor(private readonly gameService: GameService) { }
+
+  /* -------- lobby actions -------- */
+
   joinRoom(
-    data: { roomId: string; playerName: string; gameType: GameType },
+    { roomId, playerName, gameType }: { roomId: string; playerName: string; gameType: GameType },
     client: Socket,
   ) {
-    const { roomId, playerName, gameType } = data;
     let room = this.rooms[roomId];
 
     if (!room) {
-      // יוצר חדר חדש ומסמן את השחקן הראשון כ־Host
       room = this.rooms[roomId] = {
         id: roomId,
         type: gameType,
@@ -45,23 +36,57 @@ export class RoomEvents {
         id: client.id,
         name: playerName,
         ready: false,
-        isHost: room.players.length === 0,   // this first player is the host
+        isHost: room.players.length === 0,
       });
     }
+
     client.join(roomId);
     this.broadcastRoom(roomId);
   }
 
+  toggleReady({ roomId, playerId }: { roomId: string; playerId: string }) {
+    const room = this.rooms[roomId];
+    if (!room) return;
+    const player = room.players.find(p => p.id === playerId);
+    if (player && !player.isHost) {
+      player.ready = !player.ready;
+      this.broadcastRoom(roomId);
+    }
+  }
+
+  startGame({ roomId, playerId }: StartDto) {
+    const room = this.rooms[roomId];
+    if (!room || room.gameStarted) return;
+
+    const host = room.players.find(p => p.isHost);
+    const everyoneReady = room.players.length >= 2 && room.players.every(p => p.ready || p.isHost);
+
+    if (host?.id === playerId && everyoneReady) {
+      /* 1. הפוך RoomPlayer ל-Player אמיתי */
+      const players = room.players.map(p => new Player(p.name));
+      /* 2. צור משחק */
+      const { gameId, state } = this.gameService.createGame(players, room.type);
+
+      room.gameStarted = true;
+
+      /* 3. שדר מצב פתיחה + nav */
+      global.io.to(roomId).emit('game-state', state);
+      global.io.to(roomId).emit('game-started', { roomId, gameId });
+    }
+  }
+
+  /* -------- disconnect / leave -------- */
+
   handleDisconnect(client: Socket) {
     for (const roomId of Object.keys(this.rooms)) {
       const room = this.rooms[roomId];
-      const i = room.players.findIndex(p => p.id === client.id);
-      if (i !== -1) {
-        room.players.splice(i, 1);
-        // the player was removed, check if the host was removed
-        if (room.players.length && !room.players.some(p => p.isHost)) {
+      const idx = room.players.findIndex(p => p.id === client.id);
+      if (idx !== -1) {
+        const [removed] = room.players.splice(idx, 1);
+
+        if (removed.isHost && room.players.length) {
           room.players[0].isHost = true;
-          room.players[0].ready = true; // reset host's ready status
+          room.players[0].ready = true;
         }
         if (!room.players.length) delete this.rooms[roomId];
         else this.broadcastRoom(roomId);
@@ -74,35 +99,7 @@ export class RoomEvents {
     this.handleDisconnect(client);
   }
 
-  toggleReady(
-    data: { roomId: string; playerId: string },
-    client: Socket,
-  ) {
-    const room = this.rooms[data.roomId];
-    if (!room) return;
-
-    const player = room.players.find(p => p.id === data.playerId);
-    if (player) {
-      player.ready = !player.ready;
-      this.broadcastRoom(room.id);
-    }
-  }
-
-  startGame({ roomId, playerId }: { roomId: string; playerId: string }, client: Socket) {
-    const room = this.rooms[roomId];
-    if (!room || room.gameStarted) return;
-
-    const host = room.players.find(p => p.isHost);
-    const everyoneReady = room.players.every(p => p.ready);
-
-    if (host?.id === playerId && everyoneReady && room.players.length >= 2) {
-      room.gameStarted = true;
-      client.to(roomId).emit('game-started');
-      client.emit('game-started');
-    }
-  }
-
-  /* ------------- util ------------- */
+  /* -------- utils -------- */
 
   getRooms(client: Socket) {
     const list = Object.values(this.rooms).map(r => ({
@@ -118,7 +115,6 @@ export class RoomEvents {
   private broadcastRoom(roomId: string) {
     const room = this.rooms[roomId];
     if (!room) return;
-
     const payload = {
       id: room.id,
       type: room.type,
@@ -126,6 +122,6 @@ export class RoomEvents {
       maxPlayers: room.maxPlayers,
       gameStarted: room.gameStarted,
     };
-    (global as any).io.to(roomId).emit('room-update', payload);
+    global.io.to(roomId).emit('room-update', payload);
   }
 }

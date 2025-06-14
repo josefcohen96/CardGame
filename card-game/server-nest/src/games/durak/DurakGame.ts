@@ -1,4 +1,4 @@
-import { IPlayer, ICard, IGame } from '../../interfaces/Interfaces';
+import { IPlayer, ICard, GameState } from '../../interfaces/Interfaces';
 import { Suit } from '../../interfaces/Suits';
 import { CardGame } from '../../core/CardGame';
 import { DurakPot } from './DurakPot';
@@ -6,7 +6,7 @@ import { DurakCardValueStrategy } from './DurakCardValueStrategy';
 import { DurakDeckFactory } from './DurakDeckFactory';
 
 export class DurakGame extends CardGame {
-  private pot: DurakPot;
+  protected pot: DurakPot;
   private table: { attacker: ICard; defender?: ICard }[] = [];
   private attackerIndex: number = 0;
   private defenderIndex: number = 1;
@@ -90,8 +90,17 @@ export class DurakGame extends CardGame {
     return this.table.length < Math.min(6, this.players[this.defenderIndex].hand.length);
   }
 
-  public startGame(): void {
+  public startGame(): GameState {
     this.startRound();
+    return {
+      gameId: '', // This will be set by the GameService
+      players: this.players,
+      deck: this.deck,
+      pot: this.pot,
+      currentPlayerIndex: this.attackerIndex,
+      turnHistory: [],
+      gameOver: this.isGameOver(),
+    }
   }
 
   public startRound(): void {
@@ -102,43 +111,47 @@ export class DurakGame extends CardGame {
     console.log(`Defender is ${this.players[this.defenderIndex].name}`);
   }
 
-  public playTurn(playerId: string, move: any): void {
+  public playTurn(playerId: string, move: any): GameState {
     const playerIndex = this.players.findIndex(p => p.id === playerId);
-    if (playerIndex === -1) throw new Error('Player not found');
-    if (this.outPlayers.has(playerIndex)) throw new Error('Player already out of the game');
-
-    const action = move?.action;
-    switch (action) {
-      case 'attack': {
-        const attackCard = move.card;
-        if (!attackCard) throw new Error('Missing card for attack');
-        const success = this.attack(playerIndex, attackCard);
-        if (!success) throw new Error('Invalid attack');
-        break;
-      }
-      case 'addAttack': {
-        const attackCard = move.card;
-        if (!attackCard) throw new Error('Missing card for attack');
-        const success = this.addAttackCard(playerIndex, attackCard);
-        if (!success) throw new Error('Invalid additional attack');
-        break;
-      }
-      case 'defend': {
-        const defendCard = move.card;
-        const targetIndex = move.attackIndex;
-        if (defendCard === undefined || targetIndex === undefined) {
-          throw new Error('Missing card or target index for defense');
-        }
-        const defended = this.defend(targetIndex, defendCard);
-        if (!defended) throw new Error('Invalid defense');
-        break;
-      }
-      case 'endTurn':
-        this.endTurn();
-        break;
-      default:
-        throw new Error(`Unknown action type: ${action}`);
+    if (playerIndex === -1 || this.outPlayers.has(playerIndex)) {
+      throw new Error('Invalid player or player is out of the game');
     }
+    if (this.attackerIndex !== playerIndex && this.defenderIndex !== playerIndex) {
+      throw new Error('It is not your turn');
+    }
+    if (this.isGameOver()) {
+      throw new Error('Game is already over');
+    }
+    if (this.attackerIndex === playerIndex) {
+      if (!this.activeAttackers.has(playerIndex)) {
+        throw new Error('You are not allowed to attack');
+      }
+      if (move.type === 'attack') {
+        const card = move.card as ICard;
+        if (!this.attack(playerIndex, card)) {
+          throw new Error('Invalid attack');
+        }
+      } else if (move.type === 'addAttackCard') {
+        const card = move.card as ICard;
+        if (!this.addAttackCard(playerIndex, card)) {
+          throw new Error('Invalid add attack card');
+        }
+      } else {
+        throw new Error('Invalid move type');
+      }
+    } else if (this.defenderIndex === playerIndex) {
+      const { attackIndex, card } = move;
+      if (typeof attackIndex !== 'number' || !card) {
+        throw new Error('Invalid defend move');
+      }
+      if (!this.defend(attackIndex, card)) {
+        throw new Error('Defend failed');
+      }
+    } else {
+      throw new Error('Not your turn');
+    }
+
+    return this.getState();
   }
 
   public attack(playerIndex: number, card: ICard): boolean {
@@ -211,15 +224,24 @@ export class DurakGame extends CardGame {
 
     this.attackerIndex = nextAttacker;
     this.defenderIndex = nextDefender;
-    
+
   }
 
-  public endGame(): void {
+  public endGame(): GameState {
     const winner = this.getWinner();
     if (winner) {
-      console.log(`\n🏆 Game over! The Loser is: ${winner}`);
+      console.log(`Game over! Winner: ${winner}`);
     } else {
-      console.log('\n🤝 The game ended in a draw or everyone ran out of cards!');
+      console.log('Game over! No winner.');
+    }
+    return {
+      gameId: '', // This will be set by the GameService
+      players: this.players,
+      deck: this.deck,
+      pot: this.pot,
+      currentPlayerIndex: this.attackerIndex,
+      turnHistory: [],
+      gameOver: true,
     }
   }
 

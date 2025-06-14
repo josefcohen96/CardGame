@@ -1,45 +1,34 @@
 import { Injectable } from '@nestjs/common';
 import { Player } from '../entities/Player';
-import { GameFactory } from '../games/GameFactory';
-import { IGame } from '../interfaces/Interfaces';
-import { GameType } from '../interfaces/Interfaces';
+import { GameFactory } from './GameFactory';
+import { GameType, GameState, IGame } from '../interfaces/Interfaces';
 
 @Injectable()
 export class GameService {
-  private games: Map<string, IGame> = new Map();
+  private games = new Map<string, IGame>();
 
-  createGame(player: Player, gameType: GameType): string {
-    const gameId = `${gameType}-${Date.now()}-${Math.random().toString(36).substring(2, 15)}`;
-    const game = GameFactory.create(gameType, [player]);
-
-    if (!game) {
-      throw new Error(`Game type "${gameType}" is not supported`);
-    }
+  /** יצירה + הפעלה מידית */
+  createGame(players: Player[], gameType: GameType): { gameId: string; state: GameState } {
+    const gameId = `${gameType}-${Date.now()}-${Math.random().toString(36).slice(2)}`;
+    const game = GameFactory.create(gameType, players);
+    if (!game) throw new Error(`Unsupported game type: ${gameType}`);
 
     this.games.set(gameId, game);
-    return gameId;
+    const state = game.startGame();       // מחזיר GameState מוכן לשליחה
+    return { gameId, state };
   }
 
-  joinGame(gameId: string, player: Player): boolean {
-    const game = this.games.get(gameId);
-    if (!game) return false;
-    return game.addPlayer(player);
-  }
-
-  playTurn(gameId: string, playerId: string, move: any): any {
+  playTurn(gameId: string, playerId: string, move: any): GameState {
     const game = this.games.get(gameId);
     if (!game) throw new Error('Game not found');
-    return game.playTurn(playerId, move)
-
+    return game.playTurn(playerId, move);
   }
 
-  getGameState(gameId: string): any {
+  getState(gameId: string): GameState {
     const game = this.games.get(gameId);
     if (!game) throw new Error('Game not found');
     return game.getState();
   }
 
-  removeGame(gameId: string): void {
-    this.games.delete(gameId);
-  }
+  removeGame(gameId: string) { this.games.delete(gameId); }
 }

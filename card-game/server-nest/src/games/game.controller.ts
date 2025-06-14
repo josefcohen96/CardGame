@@ -11,7 +11,7 @@ export class GameController {
    */
   @Get(':roomId/state')
   getGameState(@Param('roomId') roomId: string) {
-    const state = this.gameService.getGameState(roomId);
+    const state = this.gameService.getState(roomId);
     if (!state) {
       throw new NotFoundException(`Room ${roomId} not found or game not initialized`);
     }

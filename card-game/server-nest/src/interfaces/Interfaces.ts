@@ -7,11 +7,11 @@ export enum GameType {
   WAR = 'war',
 }
 export interface IGame {
-  startGame(): void;
-  playTurn(playerId: string, move: any): void;
-  endGame(): void;
+  startGame(): GameState;
+  playTurn(playerId: string, move: any): GameState;
+  endGame(): GameState;
   addPlayer(player: Player): boolean;
-  getState(): any;
+  getState(): GameState;
 }
 
 export interface ICard {
@@ -48,4 +48,34 @@ export interface IPot {
   takeAll(): ICard[];
   peek?(): ICard[];
   getSize?(): number;
+}
+
+export interface StartDto {
+  roomId: string;
+  playerId: string;
+}
+
+export interface GameState {
+  gameId: string;
+  players: IPlayer[];
+  deck: IDeck;
+  pot: IPot;
+  currentPlayerIndex: number;
+  turnHistory: any[];
+  gameOver: boolean;
+  winner?: IPlayer;
+}
+
+export interface RoomPlayer {
+  id: string;
+  name: string;
+  ready: boolean;
+  isHost: boolean;
+}
+export interface Room {
+  id: string;
+  type: GameType;
+  maxPlayers: number;
+  gameStarted: boolean;
+  players: RoomPlayer[];
 }
