@@ -1,16 +1,22 @@
-import { SubscribeMessage, WebSocketGateway, MessageBody, ConnectedSocket, OnGatewayDisconnect } from '@nestjs/websockets';
-import { Socket } from 'socket.io';
+import { SubscribeMessage, WebSocketGateway, MessageBody, ConnectedSocket, OnGatewayDisconnect, WebSocketServer, OnGatewayInit } from '@nestjs/websockets';
+import { Server, Socket } from 'socket.io';
 import { RoomEvents } from './events/room.events';
 import { GameEvents } from './events/game.events';
 import { GameType } from 'src/interfaces/Interfaces';
 
 @WebSocketGateway({ cors: { origin: "*" }, transports: ['websocket', 'polling'] })
-export class SocketGateway implements OnGatewayDisconnect {
+export class SocketGateway implements OnGatewayInit, OnGatewayDisconnect {
+
+  /* ← הנה ה-Server שנסט דואג ליצור */
+  @WebSocketServer()
+  public server!: Server;
   constructor(
     private readonly roomEvents: RoomEvents,
     private readonly gameEvents: GameEvents
-  ) {
-    console.log('SocketGateway initialized');
+  ) { }
+  afterInit() {
+    (global as any).io = this.server;
+    console.log('SocketGateway ready – io attached');
   }
 
   handleDisconnect(client: Socket) {
