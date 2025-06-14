@@ -43,11 +43,15 @@ export class SocketGateway implements OnGatewayDisconnect {
   }
 
   // GAME EVENTS
-  @SubscribeMessage('start-game')
-  handleStartGame(@MessageBody() data: { roomId: string }, @ConnectedSocket() client: Socket) {
-    return this.gameEvents.startGame(data, client);
+  @SubscribeMessage('toggle-ready')
+  toggleReady(@MessageBody() data: { roomId: string; playerId: string }, @ConnectedSocket() client: Socket) {
+    return this.roomEvents.toggleReady(data, client);
   }
 
+  @SubscribeMessage('start-game')
+  start(@MessageBody() data: { roomId: string; playerId: string }, @ConnectedSocket() client: Socket) {
+    return this.roomEvents.startGame(data, client);
+  }
   @SubscribeMessage('game-move')
   handleGameMove(@MessageBody() data: any, @ConnectedSocket() client: Socket) {
     return this.gameEvents.onGameMove(data, client);

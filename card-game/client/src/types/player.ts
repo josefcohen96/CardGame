@@ -6,4 +6,7 @@ export interface PlayerState {
   handSize: number;
   visibleCards?: Card[];
   isBot?: boolean;
+  ready?: boolean;
+  isHost?: boolean;
+  score?: number;
 }
