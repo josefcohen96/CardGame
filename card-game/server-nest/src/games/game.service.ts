@@ -1,6 +1,6 @@
 import { Injectable } from '@nestjs/common';
 import { Player } from '../entities/Player';
-import { GameFactory } from './GameFactory';
+import { GameFactory } from './factories/GameFactory';
 import { GameType, GameState, IGame } from '../interfaces/Interfaces';
 
 @Injectable()

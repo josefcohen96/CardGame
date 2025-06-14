@@ -1,4 +1,4 @@
-import { IGame } from '../interfaces/Interfaces';
+import { IGame } from '../../interfaces/Interfaces';
 
 type GameConstructor = new (...args: any[]) => IGame;
 
