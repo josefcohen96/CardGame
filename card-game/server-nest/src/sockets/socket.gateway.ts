@@ -8,7 +8,9 @@ export class SocketGateway implements OnGatewayDisconnect {
   constructor(
     private readonly roomEvents: RoomEvents,
     private readonly gameEvents: GameEvents
-  ) { }
+  ) {
+    console.log('SocketGateway initialized');
+  }
 
   handleDisconnect(client: Socket) {
     this.roomEvents.handleDisconnect(client);

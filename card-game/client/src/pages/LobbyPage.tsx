@@ -18,6 +18,7 @@ const MAX_PLAYERS = 4;
 
 export default function LobbyPage() {
   const { id, type } = useParams<{ id: string; type: GameType }>();
+  console.log("LobbyPage params:", { id, type });
   const navigate = useNavigate();
 
   const { user } = useAuth();
@@ -31,10 +32,12 @@ export default function LobbyPage() {
   const [players, setPlayers] = useState<PlayerState[]>([]);
 
   useEffect(() => {
+    console.log("LobbyPage useEffect", { id, type, playerName });
     if (!id || !type) return;
 
     const socket = socketManager.connect();
     const onConnect = () => {
+      console.log("[Socket] Connected to lobby", { id, type, playerName });
       socket.emit('join-room', { roomId: id, playerName });
     };
 

@@ -1,4 +1,3 @@
-// src/context/AuthContext.tsx
 import React, { createContext, useContext, useEffect, useState } from "react";
 
 type UserInfo = {
@@ -9,6 +8,8 @@ type UserInfo = {
 
 type AuthContextType = {
   isLoggedIn: boolean;
+  loading: boolean;             // ← חדש
+
   user: UserInfo | null;
   login: (token: string) => void;
   logout: () => void;
@@ -35,8 +36,9 @@ function decodeJwt<T = any>(token: string): T | null {
 export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const [isLoggedIn, setIsLoggedIn] = useState(false);
   const [user, setUser] = useState<UserInfo | null>(null);
+  const [loading, setLoading] = useState(true);
 
-  /** נשמר token  ומעדכן state */
+
   const handleToken = (token: string | null) => {
     if (token) {
       const payload = decodeJwt<UserInfo & { exp: number }>(token);
@@ -48,7 +50,6 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         });
         setIsLoggedIn(true);
       } else {
-        // טוקן פגום
         localStorage.removeItem("token");
         setIsLoggedIn(false);
         setUser(null);
@@ -69,13 +70,14 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     handleToken(null);
   };
 
-  /* טעינת token שקיים עם רענון הדפדפן */
   useEffect(() => {
     handleToken(localStorage.getItem("token"));
+    setLoading(false);
+
   }, []);
 
   return (
-    <AuthContext.Provider value={{ isLoggedIn, user, login, logout }}>
+    <AuthContext.Provider value={{ isLoggedIn, user, loading, login, logout }}>
       {children}
     </AuthContext.Provider>
   );
