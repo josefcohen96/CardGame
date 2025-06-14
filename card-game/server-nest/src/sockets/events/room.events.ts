@@ -10,7 +10,7 @@ interface PlayerState {
 
 interface Room {
   id: string;
-  type: string ;          // war / durak / …
+  type: GameType;
   maxPlayers: number;
   gameStarted: boolean;
   players: PlayerState[];
@@ -25,7 +25,7 @@ export class RoomEvents {
     data: { roomId: string; playerName: string; gameType: GameType },
     client: Socket,
   ) {
-    const { roomId, playerName, gameType } = data; 
+    const { roomId, playerName, gameType } = data;
     client.join(roomId);
 
     /* צור חדר חדש אם אינו קיים */
