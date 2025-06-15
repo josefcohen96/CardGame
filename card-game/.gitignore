@@ -1,0 +1,77 @@
+#############################################################
+#  ⬇️  NODE / GENERAL
+#############################################################
+# צבירה אוטומטית של תלויות
+**/node_modules/
+
+# Build / transpiled artefacts
+**/dist/
+**/build/
+**/out/
+
+# Caches
+**/.turbo/
+**/.next/
+**/.cache/
+.vite/
+.cache/
+
+# Logs & debugging
+npm-debug.log*
+yarn-debug.log*
+pnpm-debug.log*
+lerna-debug.log*
+*.log
+logs/
+
+# OS junk
+.DS_Store
+Thumbs.db
+
+# IDE settings
+.vscode/
+.idea/
+
+# Environment variables
+.env
+.env.*          # .env.local / .env.development …
+
+#############################################################
+#  ⬇️  SERVER-NEST SPECIFIC
+#############################################################
+# SQLite DB file produced by TypeORM
+db.sqlite
+*.sqlite
+*.sqlite-journal
+
+# Swagger / OpenAPI JSON files if generated
+swagger.json
+
+#############################################################
+#  ⬇️  CLIENT-VITE / REACT
+#############################################################
+client/public/assets/
+**/coverage/
+*.coverage*
+
+# Storybook static build (אם יופעל בעתיד)
+storybook-static/
+
+#############################################################
+#  ⬇️  REDIS / DOCKER / DEPLOY
+#############################################################
+# Redis dump / AOF
+dump.rdb
+appendonly.aof
+
+# Docker artefacts
+docker-compose.override.yml
+*.local.yml
+
+#############################################################
+#  ⬇️  MISC
+#############################################################
+# Mac metadata
+*.DS_Store
+# VS Code launch configs (אם אינך מעוניין לשתף)
+.vscode/launch*.json
