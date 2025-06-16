@@ -23,6 +23,7 @@ export default function GamePage() {
   }, [id, type, name]);
 
   useSocket("game-state", (state: GameState) => {
+    console.log("[Client] Received game-state:", state);
     setGameState(state);
   });
 
@@ -34,8 +35,8 @@ export default function GamePage() {
       return <WarGameBoard gameState={gameState} />;
     case GameType.DURAK:
       // return <DurakGameBoard gameState={gameState} />;
-      return 
-    default:
+      return <div className="text-center mt-8 text-red-600">🃏 דוראק עדיין בפיתוח</div>;
+      default:
       return <div className="text-center mt-8 text-red-600">❓ סוג משחק לא נתמך</div>;
   }
 }

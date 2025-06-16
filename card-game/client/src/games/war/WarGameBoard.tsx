@@ -9,6 +9,7 @@ export default function WarGameBoard({ gameState }: { gameState: GameState }) {
 
   const handlePlay = () => {
     if (!id || !myPlayerId) return;
+    console.log("[Client] Emitting game-move", { roomId: id, playerId: myPlayerId });
     socketManager.emit("game-move", {
       roomId: id,
       playerId: myPlayerId,

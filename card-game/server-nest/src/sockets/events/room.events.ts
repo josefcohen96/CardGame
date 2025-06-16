@@ -4,16 +4,14 @@ import { GameService } from '../../api/game/game.service';
 import { GameType, Room, StartDto } from '../../interfaces';
 import { Player } from '../../games/entities/Player';
 
-/* helper להזרקה גלובלית של io */
 declare global { var io: Socket['server']; }
 
 @Injectable()
 export class RoomEvents {
   private rooms: Record<string, Room> = {};
+  private roomToGame: Record<string, string> = {}; // ✅ מיפוי חדש בין חדר למשחק
 
-  constructor(private readonly gameService: GameService) { }
-
-  /* -------- lobby actions -------- */
+  constructor(private readonly gameService: GameService) {}
 
   joinRoom(
     { roomId, playerName, gameType }: { roomId: string; playerName: string; gameType: GameType },
@@ -62,20 +60,20 @@ export class RoomEvents {
     const everyoneReady = room.players.length >= 2 && room.players.every(p => p.ready || p.isHost);
 
     if (host?.id === playerId && everyoneReady) {
-      /* 1. הפוך RoomPlayer ל-Player אמיתי */
       const players = room.players.map(p => new Player(p.name));
-      /* 2. צור משחק */
       const { gameId, state } = this.gameService.createGame(players, room.type);
 
+      this.roomToGame[roomId] = gameId; // ✅ שמירת gameId לפי roomId
       room.gameStarted = true;
 
-      /* 3. שדר מצב פתיחה + nav */
       global.io.to(roomId).emit('game-state', state);
       global.io.to(roomId).emit('game-started', { roomId, gameId });
     }
   }
 
-  /* -------- disconnect / leave -------- */
+  getGameIdForRoom(roomId: string): string | undefined {
+    return this.roomToGame[roomId];
+  }
 
   handleDisconnect(client: Socket) {
     for (const roomId of Object.keys(this.rooms)) {
@@ -83,13 +81,16 @@ export class RoomEvents {
       const idx = room.players.findIndex(p => p.id === client.id);
       if (idx !== -1) {
         const [removed] = room.players.splice(idx, 1);
-
         if (removed.isHost && room.players.length) {
           room.players[0].isHost = true;
           room.players[0].ready = true;
         }
-        if (!room.players.length) delete this.rooms[roomId];
-        else this.broadcastRoom(roomId);
+        if (!room.players.length) {
+          delete this.rooms[roomId];
+          delete this.roomToGame[roomId];
+        } else {
+          this.broadcastRoom(roomId);
+        }
       }
     }
   }
@@ -98,8 +99,6 @@ export class RoomEvents {
     client.leave(roomId);
     this.handleDisconnect(client);
   }
-
-  /* -------- utils -------- */
 
   getRooms(client: Socket) {
     const list = Object.values(this.rooms).map(r => ({

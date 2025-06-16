@@ -1,6 +1,6 @@
 import React from 'react';
 import { GameState } from '../../types/game';
-import PlayerHand from './PlayerHand';
+import PlayerZone from './PlayerZone';
 import GameBoard from './GameBoard';
 
 interface Props {
@@ -10,21 +10,27 @@ interface Props {
 }
 
 const GameLayout: React.FC<Props> = ({ gameState, renderBoard, renderActions }) => {
-  const { players, currentPlayerIndex, pile, gameOver, winner } = gameState;
+  const { players, currentPlayerIndex, sharedPile, board, piles, gameOver, winner } = gameState;
 
   return (
     <div className="p-4 flex flex-col gap-6 items-center justify-center">
-      <div className="w-full max-w-4xl">
+      <div className="w-full max-w-4xl space-y-6">
         {players.map((player, idx) => (
-          <PlayerHand
-            key={player.name}
+          <PlayerZone
+            key={player.id}
             player={player}
             isCurrent={idx === currentPlayerIndex}
+            pile={piles?.[player.id]}
           />
         ))}
       </div>
 
-      {renderBoard || <GameBoard pile={pile || []} />}
+      {renderBoard || (
+        <>
+          {sharedPile && <GameBoard pile={sharedPile} />}
+          {board && <GameBoard pile={board} />}
+        </>
+      )}
 
       {renderActions && <div className="mt-4">{renderActions}</div>}
 

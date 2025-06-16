@@ -3,21 +3,25 @@ import { Card } from "./card";
 export interface GameState {
   players: PlayerState[];
   currentPlayerIndex: number;
-  pile?: Card[];
+  sharedPile?: Card[]; // קופה משותפת (למשל שיטהד או דוראק)
+  piles?: Record<string, Card[]>; // לכל שחקן pile אישי (כמו מלחמה)
+  board?: Card[]; // לוח פעיל (כמו דוראק או שיטהד)
   gameOver: boolean;
   winner?: string;
-  [key: string]: any; // להרחבה עתידית
 }
 
 export interface PlayerState {
-  id: string;                    // מזהה ייחודי
-  name: string;                 // שם השחקן
-  handSize: number;            // כמות קלפים ביד
-  visibleCards?: Card[];       // קלפים חשופים (אם יש)
-  isBot?: boolean;             // האם זה בוט
-  isHost?: boolean;            // האם זה יוזם המשחק
-  ready?: boolean;             // האם השחקן מוכן
-  score?: number;              // ניקוד (למשחקים עתידיים)
+  id: string;                     // מזהה ייחודי
+  name: string;                  // שם השחקן
+  handSize: number;             // כמות קלפים ביד (לא כולל חשופים)
+  visibleCards?: Card[];        // קלפים חשופים (למשל שיטהד)
+  faceUpCards?: Card[];         // קלפים על השולחן (גלויים)
+  faceDownCardsCount?: number;  // כמות קלפים מוסתרים (למשל שיטהד)
+  pile?: Card[];                // קופה אישית (כמו מלחמה)
+  isBot?: boolean;              // האם זה בוט
+  isHost?: boolean;             // האם זה יוזם המשחק
+  ready?: boolean;              // האם השחקן מוכן
+  score?: number;               // ניקוד (למשחקים עתידיים)
 }
 
 export enum GameType {

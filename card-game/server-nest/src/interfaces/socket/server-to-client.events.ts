@@ -1,5 +1,5 @@
-import { Room }       from '../room/room.interface';
-import { GameState }  from '../game/game-state.interface';
+import { Room } from '../room/room.interface';
+import { ClientGameState } from '../game/client-game-state.interface';
 
 export interface ServerToClientEvents {
   /* Lobby / room */
@@ -8,9 +8,9 @@ export interface ServerToClientEvents {
 
   /* Game lifecycle */
   'game-started': (payload: { roomId: string; gameId: string }) => void;
-  'game-state':   (state: GameState) => void;
+  'game-state':   (state: ClientGameState) => void;
 
   /* Generic */
-  connect?: () => void;          // socket.io built-in – לא חובה להצהיר
+  connect?: () => void;
   disconnect?: () => void;
 }

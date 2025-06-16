@@ -1,5 +1,4 @@
 export * from './game/game-type.enum';
-export * from './game/game-state.interface';
 export * from './game/game.interface';
 export * from './game/start.dto';
 

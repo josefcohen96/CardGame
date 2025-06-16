@@ -1,10 +1,11 @@
+// interfaces/game/game.interface.ts
 import { Player } from '../../games/entities/Player';
-import { GameState } from './game-state.interface';
+import { ClientGameState } from './client-game-state.interface'; // <- חדש
 
 export interface IGame {
-  startGame(): GameState;
-  playTurn(playerId: string, move: any): GameState;
-  endGame():   GameState;
+  startGame(): ClientGameState;
+  playTurn(playerId: string, move: any): ClientGameState;
+  endGame(): ClientGameState;
   addPlayer(player: Player): boolean;
-  getState(): GameState;
+  getState(): ClientGameState;
 }

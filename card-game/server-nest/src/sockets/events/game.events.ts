@@ -1,6 +1,7 @@
 import { Injectable } from '@nestjs/common';
 import { Socket } from 'socket.io';
-import { GameService } from 'src/api/game/game.service';
+import { GameService } from '../../api/game/game.service';
+
 @Injectable()
 export class GameEvents {
   private states: Record<string, any> = {};
