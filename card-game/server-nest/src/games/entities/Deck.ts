@@ -5,6 +5,7 @@ export  class Deck implements IDeck {
     public cards: ICard[];
 
     constructor(cards: ICard[]) {
+        console.log(cards.length, "cards in deck constructor Deck.ts");
         this.cards = cards;
         this.shuffle();
 

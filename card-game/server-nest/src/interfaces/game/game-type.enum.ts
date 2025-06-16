@@ -7,9 +7,3 @@ export enum GameType {
     UNO = 'uno',
 }
 
-interface WarGameState {
-    players: { id: string; deck: ICard[] }[];
-    pile: ICard[];
-    state: 'in-progress' | 'game-over';
-    winner?: string;
-}

@@ -1,23 +1,25 @@
-import { Card } from "./card";
+import { ICard } from "./card";
 
 export interface GameState {
   players: PlayerState[];
   currentPlayerIndex: number;
-  sharedPile?: Card[]; // קופה משותפת (למשל שיטהד או דוראק)
-  piles?: Record<string, Card[]>; // לכל שחקן pile אישי (כמו מלחמה)
-  board?: Card[]; // לוח פעיל (כמו דוראק או שיטהד)
+  sharedPile?: ICard[];                // עבור קלפים משותפים (לדוג': שיטהד, דוראק)
+  piles?: Record<string, ICard[]>;     // ערימות אישיות לכל שחקן (כמו מלחמה)
+  board?: ICard[];                     // אם יש לוח פעיל (למשל בדוראק)
   gameOver: boolean;
   winner?: string;
+  round?: number;                     // מספר סיבוב נוכחי (אם קיים)
+  potSize?: number;                   // גודל הקופה המרכזית (אם יש)
 }
 
 export interface PlayerState {
   id: string;                     // מזהה ייחודי
   name: string;                  // שם השחקן
   handSize: number;             // כמות קלפים ביד (לא כולל חשופים)
-  visibleCards?: Card[];        // קלפים חשופים (למשל שיטהד)
-  faceUpCards?: Card[];         // קלפים על השולחן (גלויים)
+  visibleCards?: ICard[];        // קלפים חשופים (למשל שיטהד)
+  faceUpCards?: ICard[];         // קלפים על השולחן (גלויים)
   faceDownCardsCount?: number;  // כמות קלפים מוסתרים (למשל שיטהד)
-  pile?: Card[];                // קופה אישית (כמו מלחמה)
+  pile?: ICard[];                // קופה אישית (כמו מלחמה)
   isBot?: boolean;              // האם זה בוט
   isHost?: boolean;             // האם זה יוזם המשחק
   ready?: boolean;              // האם השחקן מוכן

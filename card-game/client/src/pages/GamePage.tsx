@@ -2,7 +2,7 @@ import { useEffect, useState } from "react";
 import { useParams, useSearchParams } from "react-router-dom";
 import socketManager from "../services/socketManager";
 import { useSocket } from "../hooks/useGameSocket";
-import type { GameState } from "../games/gameInterfaces";
+import { GameState } from "../types/game";
 import WarGameBoard from "../games/war/WarGameBoard";
 import DurakGameBoard from "../games/durak/DurakGameBoard";
 import { GameType } from "../types/game";
@@ -24,6 +24,7 @@ export default function GamePage() {
 
   useSocket("game-state", (state: GameState) => {
     console.log("[Client] Received game-state:", state);
+    console.log("gameState", state.piles,);
     setGameState(state);
   });
 
@@ -36,7 +37,7 @@ export default function GamePage() {
     case GameType.DURAK:
       // return <DurakGameBoard gameState={gameState} />;
       return <div className="text-center mt-8 text-red-600">🃏 דוראק עדיין בפיתוח</div>;
-      default:
+    default:
       return <div className="text-center mt-8 text-red-600">❓ סוג משחק לא נתמך</div>;
   }
 }

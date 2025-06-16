@@ -1,30 +1,24 @@
-import { IPlayer } from "../../interfaces";
-import { ICard } from "../../interfaces";
+import { IPlayer } from '../../interfaces';
+import { ICard } from '../../interfaces';
+export abstract class AbstractPlayer implements IPlayer {
+  id: string;
+  name: string;
+  hand: ICard[] = [];
+  pile: ICard[] = [];
 
-export class Player implements IPlayer {
-  public hand: ICard[] = [];
-  public name: string;
-  public id: string = Math.random().toString(36).substring(2, 15); // Simple ID generation
-  constructor(name: string) {
+  constructor(id: string, name: string) {
+    this.id = id;
     this.name = name;
   }
 
-  playTopCard(): ICard | undefined {
-    return this.hand.shift();
-  }
+  abstract playTopCard(): ICard | undefined;
+  abstract playCardByIndex(i: number): ICard | undefined;
 
   receiveCard(card: ICard): void {
     this.hand.push(card);
   }
 
   receiveCards(cards: ICard[]): void {
-    this.hand.push(...cards);
-  }
-
-  playCardByIndex(index: number): ICard | undefined {
-    if (index >= 0 && index < this.hand.length) {
-      return this.hand.splice(index, 1)[0];
-    }
-    return undefined;
+    this.pile.push(...cards);
   }
 }
