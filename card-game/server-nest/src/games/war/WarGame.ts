@@ -1,90 +1,125 @@
-// // Path: src/games/war/WARGame.ts
-// import { CardGame } from '../../core/CardGame';
-// import { IPlayer } from '../../interfaces/Interfaces';
-// import { WarDeckFactory } from './WarDeckFactory';
-// import { WarPot } from './WarPot';
-// import { WarCardValueStrategy } from './WarCardValueStrategy';
-// import { ICard } from '../../interfaces/Interfaces';
+// Path: src/games/war/WARGame.ts
+import { CardGame } from '../../games/core/CardGame';
+import { IPlayer } from '../../interfaces';
+import { WarDeckFactory } from './WarDeckFactory';
+import { WarPot } from './WarPot';
+import { WarCardValueStrategy } from './WarCardValueStrategy';
+import { ICard } from '../../interfaces';
+import { GameType } from '../../interfaces';
+import { GameState } from '../../interfaces';
+import { GameFactory } from '../factories/game.factory';
 
-// export class WarGame extends CardGame {
-//   public pot: WarPot;
-//   public round: number = 0;
-//   private cardValueStrategy: WarCardValueStrategy;
+export class WarGame extends CardGame {
+    /* שדות ספציפיים למשחק War */
+    protected readonly pot: WarPot;
+    private readonly cardValueStrategy: WarCardValueStrategy;
 
-//   constructor(players: IPlayer[]) {
-//     super(WarDeckFactory.createDeck(), players); // יצירת הדק מתוך הפקטורי
-//     this.pot = new WarPot();
-//     this.cardValueStrategy = new WarCardValueStrategy();
-//     this.setup();
-//   }
+    private round = 0;                     // מונה סיבובים
 
-//   private setup(): void {
-//     this.deck.shuffle();
-//     let i = 0;
-//     while (this.deck.getLength() > 0) {
-//       const card = this.deck.draw();
-//       if (card) {
-//         this.players[i % this.players.length].receiveCard(card);
-//         i++;
-//       }
-//     }
-//   }
+    constructor(players: IPlayer[]) {
+        /* דק מלא של 52 קלפים (“2”-“A”) */
+        super(GameType.WAR, WarDeckFactory.createDeck(), players);
 
-//   startGame(): void {
-//     this.round = 1;
-//     console.log("Game started, players are ready to play!");
-//   }
+        this.pot = new WarPot();
+        this.cardValueStrategy = new WarCardValueStrategy();
 
-//   playTurn(playerId: string): void {
-//     this.round++;
-//     const played: { player: IPlayer; card: ICard }[] = [];
+        this.dealCardsEvenly();
+    }
 
-//     for (const player of this.players) {
-//       const card = player.playTopCard();
-//       if (card) {
-//         this.pot.add(card);
-//         played.push({ player, card });
-//         console.log(`${player.name} played: ${card.toString()}`);
-//       }
-//     }
+    /* --------------------------------------------------------------- */
+    /*                 לוגיקת הכנה ו utility פנימיים                  */
+    /* --------------------------------------------------------------- */
 
-//     if (played.length === 0) {
-//       console.log("No cards were played.");
-//       return;
-//     }
+    /** חלוקת כל הדק שווה-בשווה בין השחקנים */
+    private dealCardsEvenly() {
+        this.deck.shuffle();
 
-//     const max = Math.max(...played.map(p => this.cardValueStrategy.getCardValue(p.card)));
-//     const winners = played.filter(p => this.cardValueStrategy.getCardValue(p.card) === max);
+        let i = 0;
+        while (this.deck.getLength() > 0) {
+            const card = this.deck.draw();
+            if (card) {
+                this.players[i % this.players.length].receiveCard(card);
+                i++;
+            }
+        }
+    }
 
-//     if (winners.length === 1) {
-//       winners[0].player.receiveCards(this.pot.takeAll());
-//       console.log(`${winners[0].player.name} won the pot!`);
-//     } else {
-//       console.log("It's a tie: pot is not distributed this round.");
-//     }
-//   }
+    /* --------------------------------------------------------------- */
+    /*              מימוש המתודות המחויבות ב-interface IGame           */
+    /* --------------------------------------------------------------- */
 
-//   getState() {
-//     return {
-//       round: this.round,
-//       players: this.players.map(p => ({
-//         name: p.name,
-//         handSize: p.hand.length,
-//       })),
-//       potSize: this.pot.getSize(),
-//     };
-//   }
+    /** התחלת המשחק - מחזיר GameState ראשוני */
+    startGame(): GameState {
+        this.round = 1;
+        return this.getState();
+    }
 
-//   endGame(): void {
-//     const winners = this.players.filter(p => p.hand.length > 0);
+    /**
+     * ביצוע תור מלא (ב־War כל השחקנים חושפים קלף יחד)
+     * @returns  GameState עדכני לאחר התור
+     */
+    playTurn(_playerId: string, _move: any): GameState {
+        if (this.gameOver) return this.getState();
 
-//     if (winners.length === 1) {
-//       console.log(`The game is over. The winner is ${winners[0].name} with ${winners[0].hand.length} cards!`);
-//     } else if (winners.length > 1) {
-//       const names = winners.map(w => w.name).join(', ');
-//       console.log(`The game ended in a draw: ${names}`);
-//     } else {
-//       console.log("Game ended: No players left with cards.");
-//     }
-//   }
-// }
+        this.round++;
+        const played: { player: IPlayer; card: ICard }[] = [];
+
+        // כל שחקן חושף קלף עליון
+        for (const player of this.players) {
+            const card = player.playTopCard();
+            if (card) {
+                this.pot.add(card);
+                played.push({ player, card });
+            }
+        }
+
+        /* אין קלפים – המשחק נגמר */
+        if (played.length === 0) {
+            return this.endGame();
+        }
+
+        /* קביעת המנצח/תיקו */
+        const maxVal = Math.max(...played.map(p => this.cardValueStrategy.getCardValue(p.card)));
+        const winners = played.filter(p => this.cardValueStrategy.getCardValue(p.card) === maxVal);
+
+        if (winners.length === 1) {
+            /* מנצח יחיד – לוקח את הקופה */
+            winners[0].player.receiveCards(this.pot.takeAll());
+        }
+        /* תיקו – שום דבר לא קורה; הקופה נשארת */
+
+        /* בדיקת סיום – מי שנשארו לו קלפים בסוף הוא המנצח */
+        const activePlayers = this.players.filter(p => p.hand.length > 0);
+        if (activePlayers.length <= 1) {
+            return this.endGame(activePlayers[0]);
+        }
+
+        return this.getState();
+    }
+
+    /** סיום המשחק */
+    endGame(winner?: IPlayer): GameState {
+        this.gameOver = true;
+        const state = this.getState();
+        state.winner = winner;
+        return state;
+    }
+
+    /* --------------------------------------------------------------- */
+    /*          הרחבה קלה ל-getState כדי לכלול round & pot            */
+    /* --------------------------------------------------------------- */
+
+    getState(): GameState {
+        const base = super.getState();
+        return {
+            ...base,
+            round: this.round,
+            potSize: this.pot.getSize(),
+        } as GameState & { round: number; potSize: number };
+    }
+}
+
+/* ------------------------------------------------------------------ */
+/*                 רישום המשחק בפקטורי – חובה!                        */
+/* ------------------------------------------------------------------ */
+GameFactory.register(GameType.WAR, WarGame);

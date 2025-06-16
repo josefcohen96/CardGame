@@ -5,9 +5,14 @@ export interface Card {
 }
 
 export interface PlayerState {
-  name: string;
-  handSize: number;
-  visibleCards?: Card[];
+  id: string;                    // מזהה ייחודי
+  name: string;                 // שם השחקן
+  handSize: number;            // כמות קלפים ביד
+  visibleCards?: Card[];       // קלפים חשופים (אם יש)
+  isBot?: boolean;             // האם זה בוט
+  isHost?: boolean;            // האם זה יוזם המשחק
+  ready?: boolean;             // האם השחקן מוכן
+  score?: number;              // ניקוד (למשחקים עתידיים)
 }
 
 export interface GameState {

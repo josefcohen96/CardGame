@@ -1,4 +1,3 @@
-import { PlayerState } from "./player";
 import { Card } from "./card";
 
 export interface GameState {
@@ -8,6 +7,17 @@ export interface GameState {
   gameOver: boolean;
   winner?: string;
   [key: string]: any; // להרחבה עתידית
+}
+
+export interface PlayerState {
+  id: string;                    // מזהה ייחודי
+  name: string;                 // שם השחקן
+  handSize: number;            // כמות קלפים ביד
+  visibleCards?: Card[];       // קלפים חשופים (אם יש)
+  isBot?: boolean;             // האם זה בוט
+  isHost?: boolean;            // האם זה יוזם המשחק
+  ready?: boolean;             // האם השחקן מוכן
+  score?: number;              // ניקוד (למשחקים עתידיים)
 }
 
 export enum GameType {

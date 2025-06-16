@@ -1,5 +1,5 @@
-import { Card } from "../types/card";
-import CardDisplay from "./CardDisplay";
+import { Card } from '../../types/card';
+import CardDisplay from './CardDisplay';
 
 export default function GameBoard({ pile }: { pile: Card[] }) {
   return (

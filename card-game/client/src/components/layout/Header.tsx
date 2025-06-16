@@ -1,4 +1,4 @@
-import { usePlayerName } from "../context/PlayerNameContext";
+import { usePlayerName } from "../../context/PlayerNameContext";
 
 export default function Header() {
   const { playerName, setPlayerName } = usePlayerName();

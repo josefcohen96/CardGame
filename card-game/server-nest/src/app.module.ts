@@ -20,10 +20,10 @@ import { SocketsModule } from './sockets/socket.module';
     GameModule,
     SocketsModule,
   ],
-  controllers: [AppController],
+  controllers: [AppController], //  do i need this ? 
 
   providers: [
-    AppService,
+    AppService,  // and this ? 
   ],
 })
 export class AppModule { }

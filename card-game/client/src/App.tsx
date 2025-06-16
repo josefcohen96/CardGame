@@ -1,5 +1,5 @@
 import { Routes, Route } from "react-router-dom";
-import Header from "./components/Header";
+import Header from "./components/layout/Header";
 import HomePage from "./pages/HomePage";
 import LobbyPage from "./pages/LobbyPage";
 import GamePage from "./pages/GamePage";
@@ -8,7 +8,7 @@ import CreateRoomPage from "./pages/CreateRoomPage";
 import RegisterPage from "./pages/RegisterPage";
 import LoginPage from "./pages/LoginPage";
 import { AuthProvider } from "./context/AuthContext";
-import PrivateRoute from "./components/PrivateRoute";
+import PrivateRoute from "./components/layout/PrivateRoute";
 
 export default function App() {
   return (

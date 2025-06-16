@@ -55,9 +55,15 @@ export class GameController {
     }
 
     // --- Game initialization stubs ---
-
     private initWarGame(players: string[]) {
         // TODO: Implement war game initialization
+        if (players.length < 2) {
+            return { error: 'At least two players are required for War' };
+        }
+        if (players.length > 4) {
+            return { error: 'War supports up to 4 players' };
+        }
+
         return { players, deck: [], state: 'not started' };
     }
 

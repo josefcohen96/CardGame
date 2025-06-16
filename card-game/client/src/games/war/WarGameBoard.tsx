@@ -1,12 +1,21 @@
 import { WarGameState } from "./types";
-import GameBoard from "../../components/GameBoard";
-import PlayerList from "../../components/PlayerList";
+import GameLayout from "../../components/shared/GameLayout";
+
+
+function handlePlay() {
+  // לוגיקה לשחק תור במלחמה
+  console.log("Playing turn in War game");
+
+  
+}
 
 export default function WarGameBoard({ gameState }: { gameState: WarGameState }) {
   return (
-    <div className="flex flex-col items-center gap-6">
-      <PlayerList players={gameState.players} />
-      <GameBoard pile={gameState.pile ?? []} />
-    </div>
+    <GameLayout
+      gameState={gameState}
+      renderActions={
+        <button onClick={handlePlay}>שחק תור</button>
+      }
+    />
   );
 }

@@ -7,7 +7,6 @@ import { GameType, GameState, IGame } from '../../interfaces/';
 export class GameService {
   private games = new Map<string, IGame>();
 
-  /** יצירה + הפעלה מידית */
   createGame(players: Player[], gameType: GameType): { gameId: string; state: GameState } {
     const gameId = `${gameType}-${Date.now()}-${Math.random().toString(36).slice(2)}`;
     const game = GameFactory.create(gameType, players);

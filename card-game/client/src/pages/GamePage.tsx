@@ -1,12 +1,11 @@
-import React, { useEffect, useState } from "react";
+import { useEffect, useState } from "react";
 import { useParams, useSearchParams } from "react-router-dom";
 import socketManager from "../services/socketManager";
 import { useSocket } from "../hooks/useGameSocket";
-import type { GameState } from "../types/game";
+import type { GameState } from "../games/gameInterfaces";
 import WarGameBoard from "../games/war/WarGameBoard";
 import DurakGameBoard from "../games/durak/DurakGameBoard";
 import { GameType } from "../types/game";
-
 
 export default function GamePage() {
   const { id, type } = useParams<{ id: string; type: string }>();
@@ -14,9 +13,10 @@ export default function GamePage() {
   const name = searchParams.get("name") || "";
   const [gameState, setGameState] = useState<GameState | null>(null);
 
-  // התחברות לחדר
+  // התחברות לחדר סוקט
   useEffect(() => {
     if (!id || !type) return;
+
     socketManager.connect();
     socketManager.emit("join-game", { roomId: id, playerName: name });
 
@@ -25,14 +25,23 @@ export default function GamePage() {
     };
   }, [id, type, name]);
 
-  // האזנה לעדכוני סטייט מהשרת
-  useSocket("game-state", (state) => setGameState(state));
+  // האזנה לעדכון סטייט
+  useSocket("game-state", (state: GameState) => {
+    setGameState(state);
+  });
 
-  if (!id || !type) return <div>Invalid game</div>;
-  if (!gameState) return <div className="text-center mt-8">טוען משחק...</div>;
+  // בדיקות בסיסיות
+  if (!id || !type) return <div className="text-center mt-8 text-red-600">❌ כתובת משחק שגויה</div>;
+  if (!gameState) return <div className="text-center mt-8">🔄 טוען משחק...</div>;
 
-  if (type === GameType.WAR) return <WarGameBoard gameState={gameState as any} />;
-  if (type === GameType.DURAK) return <DurakGameBoard gameState={gameState as any} />;
-
-  return <div className="text-center mt-8">Unknown game type</div>;
+  // רינדור לפי סוג המשחק
+  switch (type) {
+    case GameType.WAR:
+      return <WarGameBoard gameState={gameState} />;
+    case GameType.DURAK:
+      // return <DurakGameBoard gameState={gameState} />;
+      return
+    default:
+      return <div className="text-center mt-8 text-red-600">❓ סוג משחק לא נתמך</div>;
+  }
 }

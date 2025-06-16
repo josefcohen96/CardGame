@@ -1,6 +1,6 @@
 import { GameState } from "../../types/game";
 import { Card } from "../../types/card";
-import { PlayerState } from "../../types/player";
+import { PlayerState } from "../../types/game";
 
 // טיפוסים ייחודיים לדוראק
 export interface DurakPlayerState extends PlayerState {
