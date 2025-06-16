@@ -29,22 +29,18 @@ export class GameController {
         } else {
             return { error: 'Unsupported game type' };
         }
-        this.games[gameId] = { type: body.type, state: game };
+        this.games[gameId] = { type: body.type, instance: game };
         return { gameId, type: body.type };
     }
 
     @Post('play')
     playMove(@Body() body: PlayMoveDto) {
-        const game = this.games[body.gameId];
-        if (!game) return { error: 'Game not found' };
-        if (game.type === 'war') {
-            // Implement war move logic here
-            return { result: 'War move played (not implemented)' };
-        } else if (game.type === 'durak') {
-            // Implement durak move logic here
-            return { result: 'Durak move played (not implemented)' };
-        }
-        return { error: 'Invalid game type' };
+        const wrapper = this.games[body.gameId];
+        if (!wrapper) return { error: 'Game not found' };
+
+        const game = wrapper.instance;
+        const updatedState = game.playTurn(body.playerId, body.move);
+        return updatedState;
     }
 
     @Get(':gameId')

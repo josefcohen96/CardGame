@@ -6,7 +6,7 @@ class SocketManager {
   private static instance: SocketManager;
   private socket: Socket<ServerToClientEvents, ClientToServerEvents> | null = null;
 
-  private constructor() {}
+  private constructor() { }
 
   /** מחזיר instance יחיד (Singleton) */
   static getInstance() {
@@ -73,7 +73,7 @@ class SocketManager {
   off<E extends keyof ServerToClientEvents>(event: E, listener?: ServerToClientEvents[E]) {
     console.log(`[Socket] off '${event}'`);
     if (listener) this.socket?.off(event, listener as any);
-    else          this.socket?.off(event);
+    else this.socket?.off(event);
   }
 
   emit<E extends keyof ClientToServerEvents>(event: E, ...args: Parameters<ClientToServerEvents[E]>) {
@@ -83,6 +83,10 @@ class SocketManager {
 
   isConnected() {
     return !!this.socket?.connected;
+  }
+
+  getSocket() {
+    return this.socket!;
   }
 }
 

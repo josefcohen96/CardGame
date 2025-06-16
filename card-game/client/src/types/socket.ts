@@ -1,5 +1,5 @@
 import { GameState } from "./game";
-import { PlayerState } from "./player";
+import { PlayerState } from "../games/gameInterfaces";
 import { GameType } from "./game";
 
 export interface ServerToClientEvents {

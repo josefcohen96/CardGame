@@ -1,10 +1,10 @@
 import { Injectable } from '@nestjs/common';
 import { Socket } from 'socket.io';
-
+import { GameService } from 'src/api/game/game.service';
 @Injectable()
 export class GameEvents {
   private states: Record<string, any> = {};
-
+  constructor(private readonly gameService: GameService) { }
   handleDisconnect(client: Socket) {
     for (const roomId of Object.keys(this.states)) {
       const state = this.states[roomId];
@@ -63,15 +63,13 @@ export class GameEvents {
     this.broadcastState(roomId, client);
   }
 
-  onGameMove(data: any, client: Socket) {
-    // ביצוע מהלך, עדכון מצב המשחק וכו'
-    // לדוג׳:
-    // client.to(data.roomId).emit('game-update', {...});
-    const { roomId } = data;
-    const state = this.states[roomId];
-    if (state) {
-      state.currentPlayerIndex = (state.currentPlayerIndex + 1) % state.players.length;
-      this.broadcastState(roomId, client);
+  onGameMove(data: { roomId: string; playerId: string; move: any }, client: Socket) {
+    try {
+      const updatedState = this.gameService.playTurn(data.roomId, data.playerId, data.move);
+      client.to(data.roomId).emit('game-state', updatedState);
+      client.emit('game-state', updatedState);
+    } catch (e) {
+      client.emit('error', { message: e.message });
     }
   }
 
