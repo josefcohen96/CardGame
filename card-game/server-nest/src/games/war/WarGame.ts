@@ -6,12 +6,13 @@ import { WarPot } from './WarPot';
 import { WarCardValueStrategy } from './WarCardValueStrategy';
 import { ClientGameState } from '../../interfaces/game/client-game-state.interface';
 import { GameFactory } from '../factories/game.factory';
+import { WarPlayer } from './WarPlayer';
 
 export class WarGame extends CardGame {
     private readonly cardValueStrategy: WarCardValueStrategy;
     private round = 0;
 
-    constructor(players: IPlayer[]) {
+    constructor(players: WarPlayer[]) {
         super(GameType.WAR, WarDeckFactory.createDeck(), players);
         this.pot = new WarPot();
         console.log(this.pot, "pot size");

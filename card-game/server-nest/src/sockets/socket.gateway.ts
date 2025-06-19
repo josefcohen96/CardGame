@@ -44,8 +44,7 @@ export class SocketGateway implements OnGatewayInit, OnGatewayDisconnect {
 
   @SubscribeMessage('join-room')
   handleJoinRoom(
-    @MessageBody()
-    data: { roomId: string; playerName: string; gameType: GameType },
+    @MessageBody() data: { roomId: string; playerName: string; gameType: GameType },
     @ConnectedSocket() client: Socket,
   ) {
     return this.roomEvents.joinRoom(data, client);
@@ -86,13 +85,5 @@ export class SocketGateway implements OnGatewayInit, OnGatewayDisconnect {
     @ConnectedSocket() client: Socket,
   ) {
     return this.gameEvents.onGameMove(data, client);
-  }
-
-  @SubscribeMessage('join-game')
-  handleJoinGame(
-    @MessageBody() data: { roomId: string; playerName: string; gameType: GameType },
-    @ConnectedSocket() client: Socket,
-  ) {
-    return this.gameEvents.joinGame(data, client);
   }
 }
