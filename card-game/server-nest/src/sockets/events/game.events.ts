@@ -1,67 +1,73 @@
-// game-events.ts
+// src/sockets/events/game.events.ts
 import { Injectable } from '@nestjs/common';
 import { Socket } from 'socket.io';
 import { GameService } from '../../api/game/game.service';
-import { IPlayer } from '../../interfaces';
-import { GameType } from '../../interfaces';
+import { IPlayer, GameType } from '../../interfaces';
+import { SocketEmitterService } from '../socket-emitter.service';
 
 @Injectable()
 export class GameEvents {
-  constructor(private readonly gameService: GameService) {}
+  constructor(
+    private readonly gameService: GameService,
+    private readonly socketEmitter: SocketEmitterService,
+  ) {}
 
   handleDisconnect(client: Socket) {
-    // אתה יכול להרחיב את GameService לטפל בשחקנים ניתקים בעתיד
-    console.log(`Client disconnected: ${client.id}`);
+    console.log(`⚠️ [GameEvents] Client disconnected: ${client.id}`);
   }
 
-  joinGame(data: { roomId: string; playerName: string; gameType: GameType }, client: Socket) {
+  joinGame(
+    data: { roomId: string; playerName: string; gameType: GameType },
+    client: Socket,
+  ) {
     const { roomId, playerName, gameType } = data;
     client.join(roomId);
 
-    // צור אובייקט שחקן
     const player: IPlayer = {
       id: client.id,
       name: playerName,
-      hand: [], // אפשר לשפר אם צריך
+      hand: [],
     };
 
-    // בדוק אם המשחק כבר קיים
     let gameState;
     try {
       gameState = this.gameService.getState(roomId);
     } catch {
-      // אם המשחק לא קיים – צור אותו
       const { state } = this.gameService.createGame([player], gameType);
       gameState = state;
     }
 
-    // אם המשחק קיים – הוסף שחקן (בהנחה שה־IGame תומך בפונקציה מתאימה)
-    // תוכל להוסיף `addPlayer()` ל־IGame אם צריך
-    // לדוגמה:
-    // this.gameService.addPlayer(roomId, player);
-
-    this.broadcastState(roomId, gameState, client);
+    this.socketEmitter.emitToRoom(roomId, 'game-state', gameState);
+    this.socketEmitter.emitToClient(client.id, 'game-joined', {
+      roomId,
+      player: player.name,
+    });
   }
 
   startGame(data: { roomId: string; playerId: string }, client: Socket) {
     const { roomId } = data;
-    // הפעל את המשחק דרך GameService
-    const state = this.gameService.getState(roomId); // start כבר בוצע בתוך createGame
-    client.to(roomId).emit('game-started', state);
-    client.emit('game-started', state);
+    const state = this.gameService.getState(roomId);
+
+    this.socketEmitter.emitToRoom(roomId, 'game-started', state);
+    this.socketEmitter.emitToClient(client.id, 'game-started', state);
   }
 
-  onGameMove(data: { roomId: string; playerId: string; move: any }, client: Socket) {
+  onGameMove(
+    data: { roomId: string; playerId: string; move: any },
+    client: Socket,
+  ) {
     try {
-      const updatedState = this.gameService.playTurn(data.roomId, data.playerId, data.move);
-      this.broadcastState(data.roomId, updatedState, client);
+      const updatedState = this.gameService.playTurn(
+        data.roomId,
+        data.playerId,
+        data.move,
+      );
+      this.socketEmitter.emitToRoom(data.roomId, 'game-state', updatedState);
+      this.socketEmitter.emitToClient(client.id, 'game-state', updatedState);
     } catch (e) {
-      client.emit('error', { message: e.message });
+      this.socketEmitter.emitToClient(client.id, 'error', {
+        message: e.message,
+      });
     }
-  }
-
-  private broadcastState(roomId: string, state: any, client: Socket) {
-    client.to(roomId).emit('game-state', state);
-    client.emit('game-state', state);
   }
 }

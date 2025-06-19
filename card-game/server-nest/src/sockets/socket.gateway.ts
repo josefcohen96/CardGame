@@ -1,24 +1,40 @@
-
-// ./socket.gateway.ts
-
-import { SubscribeMessage, WebSocketGateway, MessageBody, ConnectedSocket, OnGatewayDisconnect, WebSocketServer, OnGatewayInit } from '@nestjs/websockets';
+// src/sockets/socket.gateway.ts
+import {
+  SubscribeMessage,
+  WebSocketGateway,
+  MessageBody,
+  ConnectedSocket,
+  OnGatewayDisconnect,
+  WebSocketServer,
+  OnGatewayInit,
+} from '@nestjs/websockets';
 import { Server, Socket } from 'socket.io';
 import { RoomEvents } from './events/room.events';
 import { GameEvents } from './events/game.events';
 import { GameType } from 'src/interfaces';
-@WebSocketGateway({ cors: { origin: "*" }, transports: ['websocket', 'polling'] })
-export class SocketGateway implements OnGatewayInit, OnGatewayDisconnect {
+import { SocketEmitterService } from './socket-emitter.service';
 
-  /* ← הנה ה-Server שנסט דואג ליצור */
+@WebSocketGateway({
+  cors: { origin: '*' },
+  transports: ['websocket', 'polling'],
+})
+export class SocketGateway implements OnGatewayInit, OnGatewayDisconnect {
   @WebSocketServer()
   public server!: Server;
+
   constructor(
     private readonly roomEvents: RoomEvents,
     private readonly gameEvents: GameEvents,
-  ) { }
+    private readonly socketEmitter: SocketEmitterService,
+  ) {}
+
   afterInit() {
-    (global as any).io = this.server;
-    console.log('SocketGateway ready – io attached');
+    this.socketEmitter.setServer(this.server);
+    console.log('✅ SocketEmitter initialized');
+  }
+
+  handleConnection(socket: Socket) {
+    console.log(`📡 Socket connected: ${socket.id}`);
   }
 
   handleDisconnect(client: Socket) {
@@ -26,22 +42,20 @@ export class SocketGateway implements OnGatewayInit, OnGatewayDisconnect {
     this.gameEvents.handleDisconnect(client);
   }
 
-  /* חיבור לקוח (רק לצורכי לוג / דיבוג) */
-  handleConnection(socket: Socket) {
-    console.log(`Socket connected: ${socket.id}`);
-  }
-
-
-  // ROOM EVENTS
   @SubscribeMessage('join-room')
-  handleJoinRoom(@MessageBody() data: { roomId: string; playerName: string, gameType: GameType }, @ConnectedSocket() client: Socket) {
-    console.log('Join room event received:', data);
+  handleJoinRoom(
+    @MessageBody()
+    data: { roomId: string; playerName: string; gameType: GameType },
+    @ConnectedSocket() client: Socket,
+  ) {
     return this.roomEvents.joinRoom(data, client);
   }
 
-
   @SubscribeMessage('leave-room')
-  handleLeaveRoom(@MessageBody() data: { roomId: string }, @ConnectedSocket() client: Socket) {
+  handleLeaveRoom(
+    @MessageBody() data: { roomId: string },
+    @ConnectedSocket() client: Socket,
+  ) {
     return this.roomEvents.leaveRoom(data, client);
   }
 
@@ -50,24 +64,35 @@ export class SocketGateway implements OnGatewayInit, OnGatewayDisconnect {
     return this.roomEvents.getRooms(client);
   }
 
-  @SubscribeMessage('join-game')
-  handleJoinGame(@MessageBody() data: { roomId: string; playerName: string }, @ConnectedSocket() client: Socket) {
-    return this.gameEvents.joinGame(data, client);
-  }
-
-  // GAME EVENTS
   @SubscribeMessage('toggle-ready')
-  toggleReady(@MessageBody() data: { roomId: string; playerId: string }, @ConnectedSocket() client: Socket) {
+  toggleReady(
+    @MessageBody() data: { roomId: string; playerId: string },
+    @ConnectedSocket() client: Socket,
+  ) {
     return this.roomEvents.toggleReady(data);
   }
 
   @SubscribeMessage('start-game')
-  start(@MessageBody() data: { roomId: string; playerId: string }, @ConnectedSocket() client: Socket) {
+  start(
+    @MessageBody() data: { roomId: string; playerId: string },
+    @ConnectedSocket() client: Socket,
+  ) {
     return this.roomEvents.startGame(data);
   }
+
   @SubscribeMessage('game-move')
-  handleGameMove(@MessageBody() data: any, @ConnectedSocket() client: Socket) {
+  handleGameMove(
+    @MessageBody() data: { roomId: string; playerId: string; move: any },
+    @ConnectedSocket() client: Socket,
+  ) {
     return this.gameEvents.onGameMove(data, client);
   }
 
+  @SubscribeMessage('join-game')
+  handleJoinGame(
+    @MessageBody() data: { roomId: string; playerName: string; gameType: GameType },
+    @ConnectedSocket() client: Socket,
+  ) {
+    return this.gameEvents.joinGame(data, client);
+  }
 }
