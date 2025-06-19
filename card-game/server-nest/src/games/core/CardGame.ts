@@ -1,5 +1,4 @@
 // core/CardGame.ts
-import { Player } from '../entities/Player';
 import {
     IDeck,
     IPot,
@@ -31,7 +30,7 @@ export abstract class CardGame implements IGame {
     abstract playTurn(playerId: string, move: any): ClientGameState;
     abstract endGame(): ClientGameState;
 
-    addPlayer(player: Player): boolean {
+    addPlayer(player: IPlayer): boolean {
         if (this.players.length >= 4) return false;
         this.players.push(player);
         return true;

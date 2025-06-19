@@ -1,8 +1,8 @@
 // src/games/war/WarPlayer.ts
-import { AbstractPlayer } from '../../games/entities/Player';
+import { Player } from '../../games/entities/Player';
 import { ICard } from '../../interfaces';
 
-export class WarPlayer extends AbstractPlayer {
+export class WarPlayer extends Player {
     playTopCard(): ICard | undefined {
         // אם היד ריקה אך יש pile → טען מחדש
         if (this.hand.length === 0 && this.pile.length > 0) {

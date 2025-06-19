@@ -83,7 +83,7 @@ export class RoomEvents {
 
     console.log(`[RoomEvents] Host=${host?.id}, everyoneReady=${everyoneReady}`);
     if (host?.id === playerId && everyoneReady) {
-      const players = room.players.map(p => new Player(p.name));
+      const players = room.players.map(p => new Player(p.id, p.name));
       const { gameId, state } = this.gameService.createGame(players, room.type);
 
       this.roomToGame[roomId] = gameId;

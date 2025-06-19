@@ -1,20 +1,18 @@
 // games/war/WarGame.ts
 import { CardGame } from '../core/CardGame';
-import { GameType } from '../../interfaces';
+import { IPlayer, GameType } from '../../interfaces';
 import { WarDeckFactory } from './WarDeckFactory';
 import { WarPot } from './WarPot';
 import { WarCardValueStrategy } from './WarCardValueStrategy';
 import { ClientGameState } from '../../interfaces/game/client-game-state.interface';
 import { GameFactory } from '../factories/game.factory';
-import { WarPlayer } from './WarPlayer';
+
 export class WarGame extends CardGame {
     private readonly cardValueStrategy: WarCardValueStrategy;
     private round = 0;
 
-    constructor(players: { id: string; name: string }[]) {
-        const warPlayers = players.map(p => new WarPlayer(p.id, p.name));
-        super(GameType.WAR, WarDeckFactory.createDeck(), warPlayers);
-        console.log(this.deck, "deck in WarGame.ts");
+    constructor(players: IPlayer[]) {
+        super(GameType.WAR, WarDeckFactory.createDeck(), players);
         this.pot = new WarPot();
         console.log(this.pot, "pot size");
         this.cardValueStrategy = new WarCardValueStrategy();

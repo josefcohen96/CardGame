@@ -1,5 +1,5 @@
 import { Injectable } from '@nestjs/common';
-import { Player } from '../../games/entities/Player';
+import { IPlayer } from '../../interfaces';
 import { GameFactory } from '../../games/factories/game.factory';
 import { GameType } from '../../interfaces';
 import { IGame } from '../../interfaces/game/game.interface';
@@ -9,7 +9,7 @@ import { ClientGameState } from '../../interfaces/game/client-game-state.interfa
 export class GameService {
   private games = new Map<string, IGame>();
 
-  createGame(players: Player[], gameType: GameType): { gameId: string; state: ClientGameState } {
+  createGame(players: IPlayer[], gameType: GameType): { gameId: string; state: ClientGameState } {
     const gameId = `${gameType}-${Date.now()}-${Math.random().toString(36).slice(2)}`;
     const game = GameFactory.create(gameType, players);
     if (!game) throw new Error(`Unsupported game type: ${gameType}`);

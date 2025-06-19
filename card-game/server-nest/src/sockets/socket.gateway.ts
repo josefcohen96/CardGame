@@ -6,7 +6,6 @@ import { Server, Socket } from 'socket.io';
 import { RoomEvents } from './events/room.events';
 import { GameEvents } from './events/game.events';
 import { GameType } from 'src/interfaces';
-
 @WebSocketGateway({ cors: { origin: "*" }, transports: ['websocket', 'polling'] })
 export class SocketGateway implements OnGatewayInit, OnGatewayDisconnect {
 
@@ -15,7 +14,7 @@ export class SocketGateway implements OnGatewayInit, OnGatewayDisconnect {
   public server!: Server;
   constructor(
     private readonly roomEvents: RoomEvents,
-    private readonly gameEvents: GameEvents
+    private readonly gameEvents: GameEvents,
   ) { }
   afterInit() {
     (global as any).io = this.server;
