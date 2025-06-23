@@ -1,9 +1,9 @@
 import { buildStandardDeck } from '../factories/standard-deck.factory';
-import { Deck } from '../entities/Deck';
+import { IDeck } from '../../interfaces';
 
 
 export class WarDeckFactory {
-  static createDeck(): Deck {
+  static createDeck(): IDeck {
     console.log("Creating War deck in WarDeckFactory.ts");
     return buildStandardDeck(2, 14, false);
   }

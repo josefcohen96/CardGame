@@ -6,5 +6,5 @@ export interface IDeck {
   draw(): ICard | null;
   getLength(): number;
   isEmpty(): boolean;
-  getAllCards?(): ICard[];
+  getAllCards(): ICard[];
 }

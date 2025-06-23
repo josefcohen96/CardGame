@@ -10,7 +10,7 @@ interface CreateGameDto {
 interface PlayMoveDto {
     gameId: string;
     playerId: string;
-    move: any; // Replace with specific move type per game
+    move: any;
 }
 
 @Controller('game')

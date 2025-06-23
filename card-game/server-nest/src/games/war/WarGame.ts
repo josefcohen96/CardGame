@@ -1,73 +1,76 @@
-// games/war/WarGame.ts
 import { CardGame } from '../core/CardGame';
-import { IPlayer, GameType } from '../../interfaces';
-import { WarDeckFactory } from './WarDeckFactory';
-import { WarPot } from './WarPot';
-import { WarCardValueStrategy } from './WarCardValueStrategy';
-import { ClientGameState } from '../../interfaces/game/client-game-state.interface';
-import { GameFactory } from '../factories/game.factory';
 import { WarPlayer } from './WarPlayer';
+import { WarDeckFactory } from './WarDeckFactory';
+import { WarCardValueStrategy } from './WarCardValueStrategy';
+import { ClientGameState, ClientPlayerState } from '../../interfaces/game/client-game-state.interface';
+import { IPlayer, ICard } from '../../interfaces';
+import { GameType } from '../../interfaces';
+import { IDeck } from '../../interfaces';
 
 export class WarGame extends CardGame {
-    private readonly cardValueStrategy: WarCardValueStrategy;
-    private round = 0;
+    private readonly deck: IDeck = WarDeckFactory.createDeck();
+    private readonly cardValueStrategy = new WarCardValueStrategy();
+    protected players: WarPlayer[] = [];
 
-    constructor(players: WarPlayer[]) {
-        super(GameType.WAR, WarDeckFactory.createDeck(), players);
-        this.pot = new WarPot();
-        console.log(this.pot, "pot size");
-        this.cardValueStrategy = new WarCardValueStrategy();
-        this.dealCardsEvenly();
+    constructor() {
+        super(GameType.WAR);
     }
 
-    private dealCardsEvenly(): void {
-        console.log(this.deck.getLength(), "cards in deck");
-        this.deck.shuffle();
-        let i = 0;
-
-        while (this.deck.getLength() > 0) {
-            const card = this.deck.draw();
-            if (card) {
-                this.players[i % this.players.length].receiveCard(card);
-                i++;
-            }
-        }
+    addPlayer(player: IPlayer): boolean {
+        if (this.players.length >= 2) return false;
+        const warPlayer = new WarPlayer(player.id, player.name);
+        this.players.push(warPlayer);
+        return true;
     }
 
     startGame(): ClientGameState {
-        this.round = 1;
+        this.deck.shuffle();
+        const cards = this.deck.getAllCards();
+        for (let i = 0; i < cards.length; i++) {
+            const currentPlayer = this.players[i % this.players.length];
+            currentPlayer.hand.push(cards[i]);
+        }
+        this.currentPlayerIndex = 0;
+        this.gameOver = false;
         return this.getState();
     }
 
-    playTurn(_playerId: string, _move: any): ClientGameState {
-        if (this.gameOver) return this.getState();
-
-        this.round++;
-
-        const played = this.players.map(player => ({
-            player,
-            card: player.playTopCard(),
-        })).filter(entry => entry.card);
-
-        for (const { card } of played) {
-            this.pot.add(card!);
+    playTurn(playerId: string): ClientGameState {
+        if (this.players.length !== 2) {
+            throw new Error('War requires exactly 2 players.');
         }
 
-        if (played.length === 0) {
-            return this.endGame();
+        const [p1, p2] = this.players;
+
+        const card1 = p1.playTopCard();
+        const card2 = p2.playTopCard();
+
+        if (!card1 || !card2) {
+            this.gameOver = true;
+            return this.getState();
         }
 
-        const maxVal = Math.max(...played.map(p => this.cardValueStrategy.getCardValue(p.card!)));
-        const winners = played.filter(p => this.cardValueStrategy.getCardValue(p.card!) === maxVal);
+        const value1 = this.cardValueStrategy.getCardValue(card1);
+        const value2 = this.cardValueStrategy.getCardValue(card2);
 
-        if (winners.length === 1) {
-            winners[0].player.receiveCards(this.pot.takeAll());
+        // נאחסן את הקלפים שעל השולחן כדי לחשוף אותם ללקוח
+        p1.lastPlayedCard = card1;
+        p2.lastPlayedCard = card2;
+
+        const pot: ICard[] = [card1, card2];
+
+        if (value1 > value2) {
+            p1.pile.push(...pot);
+        } else if (value2 > value1) {
+            p2.pile.push(...pot);
+        } else {
+            // תיקו – לשלב הבא תוכל להוסיף "מלחמה"
+            // בינתיים כל שחקן שומר את הקלף שלו
+            p1.pile.push(card1);
+            p2.pile.push(card2);
         }
 
-        const activePlayers = this.players.filter(p => p.hand.length > 0);
-        if (activePlayers.length <= 1) {
-            return this.endGame();
-        }
+        this.checkGameOver();
 
         return this.getState();
     }
@@ -77,28 +80,52 @@ export class WarGame extends CardGame {
         return this.getState();
     }
 
-    getState(): ClientGameState {
-        const players = this.players.map(p => ({
+    getState(forPlayerId?: string): ClientGameState {
+        return {
+            players: this.players.map(p => this.mapToClientPlayerState(p, forPlayerId)),
+            currentPlayerIndex: this.currentPlayerIndex,
+            gameOver: this.gameOver,
+            winner: this.getWinner(),
+            round: this.turnHistory.length,
+            potSize: this.players.reduce((acc, p) => acc + p.pile.length, 0),
+        };
+    }
+
+    private mapToClientPlayerState(p: WarPlayer, viewerId?: string): ClientPlayerState {
+        return {
             id: p.id,
             name: p.name,
             handSize: p.hand.length,
-            score: 0,
-        }));
-
-        const piles = Object.fromEntries(
-            this.players.map(p => [p.id, p.pile || []])
-        );
-
-        return {
-            players,
-            currentPlayerIndex: this.currentPlayerIndex,
-            gameOver: this.gameOver,
-            winner: undefined,
-            piles,
-            round: this.round,
-            potSize: this.pot.getSize?.() || 0,
+            visibleCards: this.getVisibleCards(p, viewerId),
+            score: p.pile.length,
         };
     }
-}
 
-GameFactory.register(GameType.WAR, WarGame);
+    private getVisibleCards(player: WarPlayer, viewerId?: string): ICard[] {
+        // אם מדובר בצופה בעצמו – נראה לו את כל הקלפים שלו
+        if (player.id === viewerId) {
+            return [...player.hand];
+        }
+
+        // לשחקנים אחרים – נחשוף רק את הקלף האחרון ששיחקו אם יש
+        return player.lastPlayedCard ? [player.lastPlayedCard] : [];
+    }
+
+    private checkGameOver() {
+        const allCardsExhausted = this.players.some(p => p.hand.length + p.pile.length === 0);
+        if (allCardsExhausted) {
+            this.gameOver = true;
+        }
+    }
+
+    private getWinner(): string | undefined {
+        if (!this.gameOver) return undefined;
+        const [p1, p2] = this.players;
+        const total1 = p1.hand.length + p1.pile.length;
+        const total2 = p2.hand.length + p2.pile.length;
+
+        if (total1 > total2) return p1.id;
+        if (total2 > total1) return p2.id;
+        return undefined;
+    }
+}

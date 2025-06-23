@@ -3,7 +3,7 @@ import { IPlayer } from '../../interfaces/';
 import { ClientGameState } from './client-game-state.interface';
 
 
-export interface IGame {
+export interface ICardGame {
   startGame(): ClientGameState;
   playTurn(playerId: string, move: any): ClientGameState;
   endGame(): ClientGameState;

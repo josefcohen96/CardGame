@@ -8,7 +8,7 @@ export function buildStandardDeck(
   min: number = 2,
   max: number = 14,
   includeJokers = false,
-): Deck {
+): IDeck {
   const cards: ICard[] = [];
 
   const suits: Suit[] = [
